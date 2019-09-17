@@ -1,0 +1,4 @@
+github.com/acteek/telegram-bot-api v4.6.5-0.20190917152410-67c024dc85c4+incompatible h1:fta+VWSEs4XmQpftBz7W3AgWVandwLLpIPilbcWPoHk=
+github.com/acteek/telegram-bot-api v4.6.5-0.20190917152410-67c024dc85c4+incompatible/go.mod h1:IUQbyS+8f7x/y9Vn20pgU2sC9CBrDjTHZX8YJ76ficw=
+github.com/technoweenie/multipartstreamer v1.0.1 h1:XRztA5MXiR1TIRHxH2uNxXxaIkKQDeX7m2XsSOlQEnM=
+github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6MDx5eUJoiEBsSvzDU9uzog=
