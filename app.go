@@ -72,8 +72,12 @@ func main() {
 				case "Меню":
 					if user, isAuth := users[update.Message.Chat.ID]; isAuth {
 						menu := dinsApi.GetMenu(user)
-						msg.Text = "Вооот"
-						msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
+						if len(menu) == 0 {
+							msg.Text = "Сейчас не доступно, попробуй после 16.00"
+						} else {
+							msg.Text = "Вооот"
+							msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
+						}
 
 					} else {
 						msg.Text = "Ты кто такой ... Используй : set_token {your-token}"
