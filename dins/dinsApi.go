@@ -2,42 +2,16 @@ package dins
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 )
 
 type DinsApi struct {
 	apiEndpoint string
 	client      *http.Client
-}
-
-//TODO all strict
-type Meal struct {
-	ID            string     `json:"id"`
-	Type          string      `json:"type"`
-	Name          string     `json:"name"`
-	Price         interface{} `json:"price"`
-	Counter       interface{} `json:"counter"`
-	Check         string      `json:"check"`
-	CheckTomorrow string      `json:"check_tomorrow"`
-}
-
-type MenuResponse struct {
-	CheckOrders   string          `json:"check_orders"`
-	MealArray     map[string]Meal `json:"meal_array"`
-	MenuArray     map[string]Meal `json:"menu_array"`
-	Orders        []string        `json:"orders"`
-	OrdersContent []string        `json:"orders_content"`
-}
-
-func (r *MenuResponse) GetMenuMeals() []Meal {
-	var meals []Meal
-	for _, m := range r.MenuArray {
-		meals = append(meals, m)
-	}
-
-	return meals
 }
 
 func NewDinsApi(apiEndpoint string) *DinsApi {
@@ -47,9 +21,8 @@ func NewDinsApi(apiEndpoint string) *DinsApi {
 	}
 }
 
-//TODO use user_id (my id ?user_id=1092)
-func (d *DinsApi) GetMenu() []Meal {
-	resp, err := d.client.Get(d.apiEndpoint + "/cafe-new/tomorrow_get_menu_array.php")
+func (d *DinsApi) GetMenu(u User) []Meal {
+	resp, err := d.client.Get(d.apiEndpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -63,6 +36,38 @@ func (d *DinsApi) GetMenu() []Meal {
 		log.Fatal("Parse error: ", parseErr)
 	}
 
-	return data.GetMenuMeals()
+	return data.GetCurrentMeals()
+}
+
+func (d *DinsApi) GetUser(token string) (User, error) {
+	cookie := http.Cookie{Name: "mydins-auth", Value: token}
+	req, err := http.NewRequest(http.MethodGet, d.apiEndpoint+"/?page=fidel", nil)
+	if err != nil {
+		return User{}, err
+	}
+	req.AddCookie(&cookie)
+	resp, err := d.client.Do(req)
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	expName, _ := regexp.Compile(`full_name \s*=\s*"([\S\s]+)" ;`)
+	expID, _ := regexp.Compile(`user_id\s*=\s*([0-9]+);`)
+
+	str := string(body)
+	parseName := expName.FindStringSubmatch(str)
+	parseId := expID.FindStringSubmatch(str)
+
+	if len(parseId) < 2 || len(parseName) < 2 {
+		err := errors.New("failed parse user_id or user_name")
+		log.Println(err)
+		return User{}, err
+	} else {
+		return User{ID: parseId[1], Name: parseName[1], Token: token}, nil
+	}
 
 }

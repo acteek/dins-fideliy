@@ -1,46 +1,21 @@
 package main
 
-import (
-	"encoding/json"
-	"fideliy/dins"
-	"fmt"
-	"log"
-)
+import "fmt"
 
 func main() {
-
-	v := []byte(`{
-		"10": {
-			"id": "10",
-				"type": "Гарнир",
-				"name": "Картофельное пюре",
-				"price": null,
-				"counter": 0,
-				"check": "0",
-				"check_tomorrow": "1"
-		},
-		"71": {
-			"id": "71",
-				"type": "Гарнир",
-				"name": "Рис с кукурузой",
-				"price": null,
-				"counter": null,
-				"check": "0",
-				"check_tomorrow": "1"
-		}
-     }`)
-	var data map[string]dins.Meal
-
-	if parseErr := json.Unmarshal(v, &data); parseErr != nil {
-		log.Fatal("Parse error")
+	//dinsEndpoint := "https://my.dins.ru"
+	//
+	//dinsApi := dins.NewDinsApi(dinsEndpoint)
+	//
+	//if _, err := dinsApi.GetUser("6ae11e1d81b202ead1733354dce71ba7"); err != nil {
+	//	log.Panic(err)
+	//}
+	type Test struct {
+		Id string
 	}
 
-	var dishes []dins.Meal
+	var ol = make(map[int32]Test)
 
-	for _, dish := range data {
-		dishes =  append(dishes, dish)
-	}
-
-	fmt.Println(dishes)
-
+	ol[93] = Test{Id:"eeeee"}
+	fmt.Print(ol[92])
 }

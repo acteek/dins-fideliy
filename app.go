@@ -2,7 +2,7 @@ package main
 
 import (
 	"fideliy/dins"
-	"fmt"
+	"fideliy/helpers"
 	telegram "github.com/acteek/telegram-bot-api"
 	"log"
 	"strings"
@@ -14,31 +14,10 @@ const (
 	dinsEndpoint = "https://my.dins.ru"
 )
 
-var mainKeyboard = telegram.NewReplyKeyboard(
-	telegram.NewKeyboardButtonRow(
-		telegram.NewKeyboardButton("Меню"),
-		telegram.NewKeyboardButton("Мои заказы"),
-	))
-
-func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
-	var keyboard [][]telegram.InlineKeyboardButton
-
-	for i := 0; i < len(meals); i++ {
-		row := telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData(meals[i].Name, meals[i].ID))
-		keyboard = append(keyboard, row)
-
-	}
-
-	return telegram.InlineKeyboardMarkup{
-		InlineKeyboard: keyboard,
-	}
-}
-
 func main() {
 	log.Println("Starting...")
 
-	tokens := make(map[int64]string)
+	users := make(map[int64]dins.User)
 
 	bot, err := telegram.NewBotAPI(botToken, tgEndpoint)
 	dinsApi := dins.NewDinsApi(dinsEndpoint)
@@ -59,35 +38,29 @@ func main() {
 
 	for update := range updates {
 		if update.Message != nil {
-
 			if update.Message.IsCommand() {
 				msg := telegram.NewMessage(update.Message.Chat.ID, "")
 				switch update.Message.Command() {
 				case "set_token":
 					m := strings.Split(update.Message.Text, " ")
 					if len(m) == 2 {
-						tokens[update.Message.Chat.ID] = m[1]
-						msg.Text = "token has been saved"
-					} else {
-						msg.Text = "please use format: save_token {your-token}"
-					}
+						token := m[1]
+						user, er := dinsApi.GetUser(token)
+						if er != nil {
+							msg.Text = "Что то пошло не так попробуй другой"
+						} else {
+							users[update.Message.Chat.ID] = user
+							msg.Text = user.Name + ", добро пожаловать"
+						}
 
-				case "get_token":
-					if token, con := tokens[update.Message.Chat.ID]; con {
-						msg.Text = "your token is " + token
 					} else {
-						msg.Text = "you don't have token yet"
+						msg.Text = "Используй команду : set_token {your-token}"
 					}
-				case "menu":
-					menu := dinsApi.GetMenu()
-					fmt.Println(menu)
-					msg.Text = "Вооот"
-					msg.ReplyMarkup = BuildMenuKeyBoard(menu)
 				case "start":
-					msg.Text = "🍏"
-					msg.ReplyMarkup = mainKeyboard
+					msg.Text = "Дороу !"
+					msg.ReplyMarkup = helpers.BuildMainKeyboard()
 				default:
-					msg.Text = "I don't know that command"
+					msg.Text = "Я не знаю такой команды"
 				}
 				if _, err := bot.Send(msg); err != nil {
 					log.Panic(err)
@@ -97,13 +70,22 @@ func main() {
 				msg := telegram.NewMessage(update.Message.Chat.ID, "")
 				switch update.Message.Text {
 				case "Меню":
-					menu := dinsApi.GetMenu()
-					fmt.Println(menu)
-					msg.Text = "Вооот"
-					msg.ReplyMarkup = BuildMenuKeyBoard(menu)
+					if user, isAuth := users[update.Message.Chat.ID]; isAuth {
+						menu := dinsApi.GetMenu(user)
+						msg.Text = "Вооот"
+						msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
 
+					} else {
+						msg.Text = "Ты кто такой ... Используй : set_token {your-token}"
+					}
+
+				case "Мои заказы":
+					msg.Text = "Это пока не реализовано"
+					msg.ReplyMarkup = telegram.NewInlineKeyboardMarkup(
+						telegram.NewInlineKeyboardRow(
+							telegram.NewInlineKeyboardButtonURL("Проверить на Сайте", dinsEndpoint+"/?page=fidel")))
 				default:
-					msg.Text = "Дороу !"
+					msg.Text = "🙀😴"
 				}
 
 				if _, err := bot.Send(msg); err != nil {
@@ -111,12 +93,50 @@ func main() {
 				}
 			}
 		} else if update.CallbackQuery != nil {
-			fmt.Println("-------")
-			fmt.Println(update.CallbackQuery)
 
-			if _, err := bot.AnswerCallbackQuery(telegram.NewCallbackWithAlert(update.CallbackQuery.ID, "Добавил в корзину")); err != nil {
-				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "Что-то пошло не так")
+			switch update.CallbackQuery.Data {
+			case "make_order":
+				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID,
+					`Картофельноe пюре, Сасисочки, Какавушка`)
+				msg.ReplyMarkup = helpers.BuildOrderKeyBoard()
+
+				sss := telegram.NewDeleteMessage(
+					update.CallbackQuery.Message.Chat.ID,
+					update.CallbackQuery.Message.MessageID)
+
 				if _, err := bot.Send(msg); err != nil {
+					log.Panic("Failed Send message", err)
+				}
+				if _, err := bot.Send(sss); err != nil {
+					log.Panic("Failed Send message", err)
+				}
+			case "send_order":
+				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "Заказал для тебя")
+				sss := telegram.NewDeleteMessage(
+					update.CallbackQuery.Message.Chat.ID,
+					update.CallbackQuery.Message.MessageID)
+
+				if _, err := bot.Send(msg); err != nil {
+					log.Panic("Failed Send message", err)
+				}
+				if _, err := bot.Send(sss); err != nil {
+					log.Panic("Failed Send message", err)
+				}
+			case "clear_order":
+				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "Штош ...")
+				sss := telegram.NewDeleteMessage(
+					update.CallbackQuery.Message.Chat.ID,
+					update.CallbackQuery.Message.MessageID)
+
+				if _, err := bot.Send(msg); err != nil {
+					log.Panic("Failed Send message", err)
+				}
+				if _, err := bot.Send(sss); err != nil {
+					log.Panic("Failed Send message", err)
+				}
+
+			default:
+				if _, err := bot.AnswerCallbackQuery(telegram.NewCallbackWithAlert(update.CallbackQuery.ID, "Добавил в корзину")); err != nil {
 					log.Panic("Failed Send message", err)
 				}
 			}
