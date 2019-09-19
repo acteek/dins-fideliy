@@ -34,7 +34,7 @@ func (r *MenuResponse) GetCurrentMeals() []Meal {
 		meals = append(meals, m)
 	}
 
-	if r.CheckOrders == "true" {
+	if r.CheckOrders == "false" {
 		return meals
 	} else {
 		return []Meal{}
