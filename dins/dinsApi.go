@@ -94,7 +94,7 @@ func (d *DinsApi) GetUser(token string) (User, error) {
 		log.Println(err)
 		return User{}, err
 	} else {
-		return User{ID: parseId[1], Name: parseName[1], Token: token}, nil
+		return User{ID: parseId[1], Name: parseName[1]}, nil
 	}
 
 }
@@ -119,10 +119,10 @@ func (d *DinsApi) SendOrder(basket []string, user User) error {
 		log.Fatal("Parse error: ", ParsErr)
 	}
 
-	cookie := http.Cookie{Name: "mydins-auth", Value: user.Token}
+	//cookie := http.Cookie{Name: "mydins-auth", Value: user.Token}
 	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "order": {string(orderJson)}, "make_the_order": {"Заказать"}, "order_id": {""}}
 	req, _ := http.NewRequest(http.MethodPost, d.apiEndpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
-	req.AddCookie(&cookie)
+	//req.AddCookie(&cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	_, err := d.client.Do(req)

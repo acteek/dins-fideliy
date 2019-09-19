@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	botToken     = "880777116:AAEOXE6RVHEWzzC0hthVPjwG37WxsUbRy2U" // Prod Bot
+	botToken = "880777116:AAEOXE6RVHEWzzC0hthVPjwG37WxsUbRy2U" // Prod Bot
 	//botToken     = "987354230:AAGoDDLMxwowUY_wbuz6UCdgtD33eQE_Q4o" // Test_Bot
-	tgEndpoint   = "http://157.230.184.220/bot%s/%s"               //proxy to api.telegram.com
+	tgEndpoint   = "http://157.230.184.220/bot%s/%s" //proxy to api.telegram.com
 	dinsEndpoint = "https://my.dins.ru"
 )
 
@@ -30,7 +30,7 @@ func main() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	//TODO only for tests
-	users[149199925] = dins.User{ID: "1092", Name: "Sergey Ryazanov", Token: "6ae11e1d81b202ead1733354dce71ba7"}
+	users[149199925] = dins.User{ID: "1092", Name: "Sergey Ryazanov"}
 
 	u := telegram.NewUpdate(0)
 	u.Timeout = 60
