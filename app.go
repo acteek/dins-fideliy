@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	//botToken     = "880777116:AAEOXE6RVHEWzzC0hthVPjwG37WxsUbRy2U" // Prod Bot
-	botToken     = "987354230:AAGoDDLMxwowUY_wbuz6UCdgtD33eQE_Q4o" // Test_Bot
+	botToken     = "880777116:AAEOXE6RVHEWzzC0hthVPjwG37WxsUbRy2U" // Prod Bot
+	//botToken     = "987354230:AAGoDDLMxwowUY_wbuz6UCdgtD33eQE_Q4o" // Test_Bot
 	tgEndpoint   = "http://157.230.184.220/bot%s/%s"               //proxy to api.telegram.com
 	dinsEndpoint = "https://my.dins.ru"
 )
