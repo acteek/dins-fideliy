@@ -10,12 +10,18 @@ type Meal struct {
 	CheckTomorrow string      `json:"check_tomorrow"`
 }
 
+type OrderContent struct {
+	ID      string `json:"id"`
+	OrderID string `json:"order_id"`
+	MealID  string `json:"meal_id"`
+	Qty     string `json:"qty"`
+}
 type MenuResponse struct {
 	CheckOrders   string          `json:"check_orders"`
 	MealArray     map[string]Meal `json:"meal_array"`
 	MenuArray     map[string]Meal `json:"menu_array"`
-	//Orders        []string        `json:"orders"`
-	//OrdersContent []string        `json:"orders_content"` //TODO
+	OrdersContent []OrderContent  `json:"orders_content"`
+	//Orders        []string        `json:"orders"` //TODO
 }
 
 type User struct {
