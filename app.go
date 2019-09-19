@@ -51,6 +51,7 @@ func main() {
 					if len(m) == 2 {
 						token := m[1]
 						user, er := dinsApi.GetUser(token)
+						log.Println(user)
 						if er != nil {
 							msg.Text = "Что то пошло не так попробуй другой"
 						} else {
@@ -62,7 +63,7 @@ func main() {
 						msg.Text = "Используй команду: /set_token your-token"
 					}
 				case "start":
-					msg.Text = "Дороу !"
+					msg.Text = "Привет. Для авторизации используй \n /set_token {mydins-auth cookie c my.dins.ru}"
 					msg.ReplyMarkup = helpers.BuildMainKeyboard()
 				default:
 					msg.Text = "Я не знаю такой команды"
