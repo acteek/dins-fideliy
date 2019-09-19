@@ -9,23 +9,28 @@ type Meal struct {
 	Check         string      `json:"check"`
 	CheckTomorrow string      `json:"check_tomorrow"`
 }
-type Order struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
 
 type MenuResponse struct {
 	CheckOrders   string          `json:"check_orders"`
 	MealArray     map[string]Meal `json:"meal_array"`
 	MenuArray     map[string]Meal `json:"menu_array"`
-	Orders        []string        `json:"orders"`
-	OrdersContent []string        `json:"orders_content"`
+	//Orders        []string        `json:"orders"`
+	//OrdersContent []string        `json:"orders_content"` //TODO
 }
 
 type User struct {
 	ID    string
 	Name  string
 	Token string
+}
+
+type Order struct {
+	ID      string      `json:"id"`
+	Qty     int         `json:"qty"` // value 1 order, value 0 not order
+	Name    string      `json:"name"`
+	Price   interface{} `json:"price"`
+	Type    string      `json:"type"`
+	Counter interface{} `json:"counter"`
 }
 
 func (r *MenuResponse) GetCurrentMeals() []Meal {

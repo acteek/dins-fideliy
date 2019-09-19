@@ -38,3 +38,10 @@ func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 			telegram.NewInlineKeyboardButtonData("Ок", "send_order"),
 			telegram.NewInlineKeyboardButtonData("Я Передумал", "clear_order")))
 }
+
+func DinsRedirectKeyBoard(dinsEndpoint string, text string) telegram.InlineKeyboardMarkup {
+	return telegram.NewInlineKeyboardMarkup(
+		telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonURL(text, dinsEndpoint+"/?page=fidel")))
+
+}

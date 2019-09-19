@@ -99,16 +99,44 @@ func (d *DinsApi) GetUser(token string) (User, error) {
 
 }
 
-//TODO implement send request
-func (d *DinsApi) SendOrder(order Order, user User) error {
-	cookie := http.Cookie{Name: "mydins-auth", Value: user.Token}
-	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "orders": {"TODO"}}
+func (d *DinsApi) SendOrder(basket []string, user User) error {
+	var orders []Order
+	mealStore := d.CurrentMeals()
+	for _, id := range basket {
+		meal := mealStore[id]
+		orders = append(orders, Order{
+			ID:      meal.ID,
+			Qty:     1,
+			Name:    meal.Name,
+			Price:   meal.Price,
+			Type:    meal.Type,
+			Counter: meal.Counter,
+		})
+	}
 
-	req, _ := http.NewRequest(http.MethodGet, d.apiEndpoint+"/TODO/", strings.NewReader(values.Encode()))
+	orderJson, ParsErr := json.Marshal(orders)
+	if ParsErr != nil {
+		log.Fatal("Parse error: ", ParsErr)
+	}
+
+	cookie := http.Cookie{Name: "mydins-auth", Value: user.Token}
+	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "order": {string(orderJson)}, "make_the_order": {"Заказать"}, "order_id": {""}}
+	req, _ := http.NewRequest(http.MethodPost, d.apiEndpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
 	req.AddCookie(&cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	_, err := d.client.Do(req)
+	log.Println(user.Name + "make order " + string(orderJson))
 
 	return err
+
+}
+
+//TODO implement cancel
+func (d *DinsApi) CancelOrder(orderID int64) {
+	//user_id: 1092
+	//full_name: Ryazanov Sergey
+	//order:
+	//order_id: 26758
+	//cancel_the_order: Отменить
 }

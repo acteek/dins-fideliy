@@ -30,7 +30,6 @@ func main() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	//TODO only for tests
-	bot.Debug = true
 	users[149199925] = dins.User{ID: "1092", Name: "Sergey Ryazanov", Token: "6ae11e1d81b202ead1733354dce71ba7"}
 
 	u := telegram.NewUpdate(0)
@@ -91,9 +90,7 @@ func main() {
 
 				case "Мои заказы":
 					msg.Text = "Это пока не реализовано"
-					msg.ReplyMarkup = telegram.NewInlineKeyboardMarkup(
-						telegram.NewInlineKeyboardRow(
-							telegram.NewInlineKeyboardButtonURL("Проверить на Сайте", dinsEndpoint+"/?page=fidel")))
+					msg.ReplyMarkup = helpers.DinsRedirectKeyBoard(dinsEndpoint, "Проверить на Сайте")
 				default:
 					msg.Text = "🙀😴"
 				}
@@ -134,19 +131,36 @@ func main() {
 				}
 
 			case "send_order":
-				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "Заказал для тебя")
-				sss := telegram.NewDeleteMessage(
-					update.CallbackQuery.Message.Chat.ID,
-					update.CallbackQuery.Message.MessageID)
 
-				delete(baskets, update.CallbackQuery.Message.Chat.ID)
+				if basket, nonEmpty := baskets[update.CallbackQuery.Message.Chat.ID]; nonEmpty {
+					user := users[update.CallbackQuery.Message.Chat.ID]
+					msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
+					delSubmit := telegram.NewDeleteMessage(
+						update.CallbackQuery.Message.Chat.ID,
+						update.CallbackQuery.Message.MessageID)
 
-				if _, err := bot.Send(msg); err != nil {
-					log.Panic("Failed Send message", err)
+					if err := dinsApi.SendOrder(basket, user); err != nil {
+						msg.Text = "Что-то пошло не так"
+						msg.ReplyMarkup = helpers.DinsRedirectKeyBoard(dinsEndpoint, "Заказать на сайте")
+					} else {
+						msg.Text = "Заказал для тебя"
+					}
+
+					delete(baskets, update.CallbackQuery.Message.Chat.ID)
+
+					if _, err := bot.Send(msg); err != nil {
+						log.Panic("Failed Send message", err)
+					}
+					if _, err := bot.Send(delSubmit); err != nil {
+						log.Panic("Failed Send message", err)
+					}
+
+				} else {
+					if _, err := bot.AnswerCallbackQuery(telegram.NewCallbackWithAlert(update.CallbackQuery.ID, "Ты ничего не выбрал")); err != nil {
+						log.Panic("Failed Send message", err)
+					}
 				}
-				if _, err := bot.Send(sss); err != nil {
-					log.Panic("Failed Send message", err)
-				}
+
 			case "clear_order":
 				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "Штош ...")
 				sss := telegram.NewDeleteMessage(
