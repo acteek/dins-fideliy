@@ -3,7 +3,6 @@ package main
 import (
 	"fideliy/dins"
 	"fideliy/helpers"
-	"fmt"
 	telegram "github.com/acteek/telegram-bot-api"
 	"log"
 	"strings"
@@ -66,7 +65,6 @@ func main() {
 				case "start":
 					msg.Text = "Дороу !"
 					msg.ReplyMarkup = helpers.BuildMainKeyboard()
-					fmt.Println(update.Message.Chat.ID)
 				default:
 					msg.Text = "Я не знаю такой команды"
 				}
@@ -108,20 +106,33 @@ func main() {
 
 			switch update.CallbackQuery.Data {
 			case "make_order":
-				orderVieW := strings.Join(baskets[update.CallbackQuery.Message.Chat.ID], ", ")
-				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, orderVieW)
-				msg.ReplyMarkup = helpers.BuildOrderKeyBoard()
+				if basket, nonEmpty := baskets[update.CallbackQuery.Message.Chat.ID]; nonEmpty {
+					var names []string
+					mealStore := dinsApi.CurrentMeals()
+					for _, id := range basket {
+						names = append(names, mealStore[id].Name)
+					}
 
-				sss := telegram.NewDeleteMessage(
-					update.CallbackQuery.Message.Chat.ID,
-					update.CallbackQuery.Message.MessageID)
+					submit := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, strings.Join(names, ", "))
+					submit.ReplyMarkup = helpers.BuildOrderKeyBoard()
 
-				if _, err := bot.Send(msg); err != nil {
-					log.Panic("Failed Send message", err)
+					deleteMenu := telegram.NewDeleteMessage(
+						update.CallbackQuery.Message.Chat.ID,
+						update.CallbackQuery.Message.MessageID)
+
+					if _, err := bot.Send(submit); err != nil {
+						log.Panic("Failed Send message", err)
+					}
+					if _, err := bot.Send(deleteMenu); err != nil {
+						log.Panic("Failed Send message", err)
+					}
+
+				} else {
+					if _, err := bot.AnswerCallbackQuery(telegram.NewCallbackWithAlert(update.CallbackQuery.ID, "Ты ничего не выбрал")); err != nil {
+						log.Panic("Failed Send message", err)
+					}
 				}
-				if _, err := bot.Send(sss); err != nil {
-					log.Panic("Failed Send message", err)
-				}
+
 			case "send_order":
 				msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "Заказал для тебя")
 				sss := telegram.NewDeleteMessage(
