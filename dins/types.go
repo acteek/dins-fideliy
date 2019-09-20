@@ -1,5 +1,10 @@
 package dins
 
+import (
+	"encoding/json"
+	"log"
+)
+
 type Meal struct {
 	ID            string      `json:"id"`
 	Type          string      `json:"type"`
@@ -17,17 +22,15 @@ type OrderContent struct {
 	Qty     string `json:"qty"`
 }
 type MenuResponse struct {
-	CheckOrders   string          `json:"check_orders"`
-	MealArray     map[string]Meal `json:"meal_array"`
-	MenuArray     map[string]Meal `json:"menu_array"`
-	OrdersContent []OrderContent  `json:"orders_content"`
-	//Orders        []string        `json:"orders"` //TODO
+	isAbleToOrder bool
+	Meals         map[string]Meal
+	Menu          []Meal
+	Orders        []OrderContent
 }
 
 type User struct {
-	ID    string
-	Name  string
-	//Token string
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Order struct {
@@ -39,16 +42,10 @@ type Order struct {
 	Counter interface{} `json:"counter"`
 }
 
-func (r *MenuResponse) GetCurrentMeals() []Meal {
-	var meals []Meal
-	for _, m := range r.MenuArray {
-		meals = append(meals, m)
+func (u *User) GetBytes() []byte {
+	bytes, ParsErr := json.Marshal(u)
+	if ParsErr != nil {
+		log.Fatal("Parse error: ", ParsErr)
 	}
-
-	if r.CheckOrders == "true" {
-		return meals
-	} else {
-		return []Meal{}
-	}
-
+	return bytes
 }

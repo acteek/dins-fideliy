@@ -30,18 +30,11 @@ func currentMeals(apiEndpoint string) map[string]Meal {
 	if err != nil {
 		log.Panic(err)
 	}
-
 	defer resp.Body.Close()
-
-	data := MenuResponse{}
-
 	body, _ := ioutil.ReadAll(resp.Body)
+	data := ParseResponse(body)
 
-	if parseErr := json.Unmarshal(body, &data); parseErr != nil {
-		log.Fatal("Parse error: ", parseErr)
-	}
-
-	return data.MealArray
+	return data.Meals
 }
 
 func (d *DinsApi) CurrentMeals() map[string]Meal {
@@ -54,16 +47,15 @@ func (d *DinsApi) GetMenu(u User) []Meal {
 		log.Panic(err)
 	}
 	defer resp.Body.Close()
-
-	data := MenuResponse{}
-
 	body, _ := ioutil.ReadAll(resp.Body)
+	data := ParseResponse(body)
 
-	if parseErr := json.Unmarshal(body, &data); parseErr != nil {
-		log.Fatal("Parse error: ", parseErr)
+	if data.isAbleToOrder {
+		return data.Menu
+	} else {
+		return []Meal{}
 	}
 
-	return data.GetCurrentMeals()
 }
 
 func (d *DinsApi) GetUser(token string) (User, error) {
@@ -119,10 +111,8 @@ func (d *DinsApi) SendOrder(basket []string, user User) error {
 		log.Fatal("Parse error: ", ParsErr)
 	}
 
-	//cookie := http.Cookie{Name: "mydins-auth", Value: user.Token}
 	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "order": {string(orderJson)}, "make_the_order": {"Заказать"}, "order_id": {""}}
 	req, _ := http.NewRequest(http.MethodPost, d.apiEndpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
-	//req.AddCookie(&cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	_, err := d.client.Do(req)

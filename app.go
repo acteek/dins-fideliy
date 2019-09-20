@@ -18,8 +18,10 @@ const (
 func main() {
 	log.Println("Starting...")
 
-	users := make(map[int64]dins.User)
+	users := NewStore("./data")
 	baskets := make(map[int64][]string)
+
+	defer users.Close()
 
 	bot, err := telegram.NewBotAPI(botToken, tgEndpoint)
 	dinsApi := dins.NewDinsApi(dinsEndpoint)
@@ -30,7 +32,7 @@ func main() {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	//TODO only for tests
-	users[149199925] = dins.User{ID: "1092", Name: "Sergey Ryazanov"}
+	users.Put(149199925, dins.User{ID: "1092", Name: "Sergey Ryazanov"})
 
 	u := telegram.NewUpdate(0)
 	u.Timeout = 60
@@ -55,7 +57,9 @@ func main() {
 						if er != nil {
 							msg.Text = "Что то пошло не так попробуй другой"
 						} else {
-							users[update.Message.Chat.ID] = user
+							if err := users.Put(update.Message.Chat.ID, user); err != nil {
+								msg.Text = "Что то пошло не так попробуй другой"
+							}
 							msg.Text = user.Name + ", добро пожаловать"
 						}
 
@@ -76,7 +80,7 @@ func main() {
 				msg := telegram.NewMessage(update.Message.Chat.ID, "")
 				switch update.Message.Text {
 				case "Меню":
-					if user, isAuth := users[update.Message.Chat.ID]; isAuth {
+					if user, getErr := users.Get(update.Message.Chat.ID); getErr == nil {
 						menu := dinsApi.GetMenu(user)
 						if len(menu) == 0 {
 							msg.Text = "Сейчас меню не доступно, попробуй позже"
@@ -132,27 +136,30 @@ func main() {
 				}
 
 			case "send_order":
-
 				if basket, nonEmpty := baskets[update.CallbackQuery.Message.Chat.ID]; nonEmpty {
-					user := users[update.CallbackQuery.Message.Chat.ID]
 					msg := telegram.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
-					delSubmit := telegram.NewDeleteMessage(
-						update.CallbackQuery.Message.Chat.ID,
-						update.CallbackQuery.Message.MessageID)
-
-					if err := dinsApi.SendOrder(basket, user); err != nil {
-						msg.Text = "Что-то пошло не так"
-						msg.ReplyMarkup = helpers.DinsRedirectKeyBoard(dinsEndpoint, "Заказать на сайте")
+					user, getErr := users.Get(update.CallbackQuery.Message.Chat.ID)
+					if getErr != nil {
+						msg.Text = "Что-то пошло не так, попробуй /set_token"
 					} else {
-						msg.Text = "Заказал для тебя"
+						delSubmit := telegram.NewDeleteMessage(
+							update.CallbackQuery.Message.Chat.ID,
+							update.CallbackQuery.Message.MessageID)
+
+						if err := dinsApi.SendOrder(basket, user); err != nil {
+							msg.Text = "Что-то пошло не так"
+							msg.ReplyMarkup = helpers.DinsRedirectKeyBoard(dinsEndpoint, "Заказать на сайте")
+						} else {
+							msg.Text = "Заказал для тебя"
+						}
+						if _, err := bot.Send(delSubmit); err != nil {
+							log.Panic("Failed Send message", err)
+						}
 					}
 
 					delete(baskets, update.CallbackQuery.Message.Chat.ID)
 
 					if _, err := bot.Send(msg); err != nil {
-						log.Panic("Failed Send message", err)
-					}
-					if _, err := bot.Send(delSubmit); err != nil {
 						log.Panic("Failed Send message", err)
 					}
 
