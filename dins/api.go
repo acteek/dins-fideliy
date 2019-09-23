@@ -116,7 +116,7 @@ func (d *DinsApi) SendOrder(basket []string, user User) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	_, err := d.client.Do(req)
-	log.Println(user.Name + "make order " + string(orderJson))
+	log.Println(user.Name + " make order " + string(orderJson))
 
 	return err
 
