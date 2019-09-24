@@ -15,7 +15,7 @@ type Meal struct {
 	CheckTomorrow string      `json:"check_tomorrow"`
 }
 
-type OrderContent struct {
+type Orders struct {
 	ID      string `json:"id"`
 	OrderID string `json:"order_id"`
 	MealID  string `json:"meal_id"`
@@ -25,7 +25,7 @@ type MenuResponse struct {
 	isAbleToOrder bool
 	Meals         map[string]Meal
 	Menu          []Meal
-	Orders        []OrderContent
+	Orders        []Orders
 }
 
 type User struct {

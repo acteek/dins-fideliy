@@ -50,12 +50,24 @@ func (d *DinsApi) GetMenu(u User) []Meal {
 	body, _ := ioutil.ReadAll(resp.Body)
 	data := ParseResponse(body)
 
-	if data.isAbleToOrder {
-		return data.Menu
-	} else {
+	if !data.isAbleToOrder || len(data.Orders) > 0 {
 		return []Meal{}
+	} else {
+		return data.Menu
 	}
 
+}
+
+func (d *DinsApi) GetOrders(u User) []Orders {
+	resp, err := d.client.Get(d.apiEndpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	data := ParseResponse(body)
+
+	return data.Orders
 }
 
 func (d *DinsApi) GetUser(token string) (User, error) {
@@ -111,7 +123,7 @@ func (d *DinsApi) SendOrder(basket []string, user User) error {
 		log.Fatal("Parse error: ", ParsErr)
 	}
 
-	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "order": {string(orderJson)}, "make_the_order": {"Заказать"}, "order_id": {""}}
+	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "order": {string(orderJson)}, "make_the_order": {"Заказать"}}
 	req, _ := http.NewRequest(http.MethodPost, d.apiEndpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -122,11 +134,13 @@ func (d *DinsApi) SendOrder(basket []string, user User) error {
 
 }
 
-//TODO implement cancel
-func (d *DinsApi) CancelOrder(orderID int64) {
-	//user_id: 1092
-	//full_name: Ryazanov Sergey
-	//order:
-	//order_id: 26758
-	//cancel_the_order: Отменить
+func (d *DinsApi) CancelOrder(orderID string, user User) error {
+	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "cancel_the_order": {"Отменить"}, "order_id": {orderID}}
+	req, _ := http.NewRequest(http.MethodPost, d.apiEndpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	_, err := d.client.Do(req)
+	log.Println(user.Name + " cancel order " + orderID)
+
+	return err
 }

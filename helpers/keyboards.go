@@ -17,12 +17,11 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 	var keyboard [][]telegram.InlineKeyboardButton
 
 	orderButton := telegram.NewInlineKeyboardRow(
-		telegram.NewInlineKeyboardButtonData("Заказать", "make_order"))
+		telegram.NewInlineKeyboardButtonData("В Корзину", "make_order"))
 
-	for i := 0; i < len(meals); i += 2 {
+	for i := 0; i < len(meals); i++ {
 		row := telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData(meals[i].Name, meals[i].ID),
-			telegram.NewInlineKeyboardButtonData(meals[i+1].Name, meals[i+1].ID))
+			telegram.NewInlineKeyboardButtonData(meals[i].Name, meals[i].ID))
 		keyboard = append(keyboard, row)
 
 	}
@@ -43,5 +42,12 @@ func DinsRedirectKeyBoard(dinsEndpoint string, text string) telegram.InlineKeybo
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
 			telegram.NewInlineKeyboardButtonURL(text, dinsEndpoint+"/?page=fidel")))
+
+}
+
+func BuildCancelOrderKeyBoard(order dins.Orders) telegram.InlineKeyboardMarkup {
+	return telegram.NewInlineKeyboardMarkup(
+		telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData("Отменить", "cancel_order:"+order.ID)))
 
 }
