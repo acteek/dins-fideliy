@@ -15,7 +15,7 @@ type Store struct {
 func NewStore(path string) *Store {
 	db, err := bitcask.Open(path)
 	if err != nil {
-		log.Panic("Read User failed: ", err)
+		log.Fatal("Read User failed: ", err)
 	}
 	return &Store{db}
 

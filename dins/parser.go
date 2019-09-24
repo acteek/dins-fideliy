@@ -3,7 +3,9 @@ package dins
 import (
 	"encoding/json"
 	"github.com/tidwall/gjson"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -38,7 +40,7 @@ func parseOrders(orders gjson.Result) []Orders {
 	return data
 }
 
-func ParseAbleToOrder(check gjson.Result) bool {
+func parseAbleToOrder(check gjson.Result) bool {
 	value, parseErr := strconv.ParseBool(check.Str)
 	if parseErr != nil {
 		log.Fatal("Parse AbleToOrder error: ", parseErr)
@@ -46,12 +48,16 @@ func ParseAbleToOrder(check gjson.Result) bool {
 	return value
 }
 
-func ParseResponse(bytes []byte) MenuResponse {
+func ParseResponse(resp *http.Response) MenuResponse {
+	bytes, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
 	p := gjson.ParseBytes(bytes)
 	return MenuResponse{
-		isAbleToOrder: ParseAbleToOrder(p.Get("check_orders")),
+		isAbleToOrder: parseAbleToOrder(p.Get("check_orders")),
 		Meals:         parseMeals(p.Get("meal_array")),
 		Menu:          parseMenu(p.Get("menu_array")),
 		Orders:        parseOrders(p.Get("orders_content")),
 	}
+
 }
