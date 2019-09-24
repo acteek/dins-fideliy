@@ -1,0 +1,13 @@
+[Unit]
+Description=Telegram bot food delivery.
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/acteek/fideliy/app
+StandardOutput=/home/acteek/fideliy/fideliy.log
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -32,10 +32,10 @@ func parseMeals(meals gjson.Result) map[string]Meal {
 	return parsed
 }
 
-func parseOrders(orders gjson.Result) []Orders {
-	var data []Orders
+func parseOrders(orders gjson.Result) []Order {
+	var data []Order
 	if parseErr := json.Unmarshal([]byte(orders.Raw), &data); parseErr != nil {
-		log.Fatal("Parse Orders error: ", parseErr)
+		log.Fatal("Parse Order error: ", parseErr)
 	}
 	return data
 }

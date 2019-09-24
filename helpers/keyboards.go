@@ -45,9 +45,9 @@ func DinsRedirectKeyBoard(dinsEndpoint string, text string) telegram.InlineKeybo
 
 }
 
-func BuildCancelOrderKeyBoard(order dins.Orders) telegram.InlineKeyboardMarkup {
+func BuildCancelOrderKeyBoard(order dins.Order) telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData("Отменить", "cancel_order:"+order.OrderID)))
+			telegram.NewInlineKeyboardButtonData("Отменить", "cancel_order:"+order.ID)))
 
 }
