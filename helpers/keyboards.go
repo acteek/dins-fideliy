@@ -17,7 +17,7 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 	var keyboard [][]telegram.InlineKeyboardButton
 
 	orderButton := telegram.NewInlineKeyboardRow(
-		telegram.NewInlineKeyboardButtonData("В Корзину", "make_order"))
+		telegram.NewInlineKeyboardButtonData("Перейти в корзину", "make_order"))
 
 	for i := 0; i < len(meals); i++ {
 		row := telegram.NewInlineKeyboardRow(
