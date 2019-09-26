@@ -12,9 +12,9 @@ import (
 )
 
 type DinsApi struct {
-	apiEndpoint  string
+	Endpoint     string
 	client       *http.Client
-	currentMeals map[string]Meal
+	CurrentMeals map[string]Meal
 }
 
 func NewDinsApi(apiEndpoint string) *DinsApi {
@@ -24,9 +24,9 @@ func NewDinsApi(apiEndpoint string) *DinsApi {
 	}
 
 	return &DinsApi{
-		apiEndpoint:  apiEndpoint,
+		Endpoint:     apiEndpoint,
 		client:       &http.Client{},
-		currentMeals: mealStore,
+		CurrentMeals: mealStore,
 	}
 }
 
@@ -39,12 +39,8 @@ func currentMeals(apiEndpoint string) (map[string]Meal, error) {
 	return data.Meals, nil
 }
 
-func (d *DinsApi) CurrentMeals() map[string]Meal {
-	return d.currentMeals
-}
-
 func (d *DinsApi) GetMenu(u User) []Meal {
-	resp, err := d.client.Get(d.apiEndpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
+	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -59,7 +55,7 @@ func (d *DinsApi) GetMenu(u User) []Meal {
 }
 
 func (d *DinsApi) GetOrders(u User) []Order {
-	resp, err := d.client.Get(d.apiEndpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
+	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -71,7 +67,7 @@ func (d *DinsApi) GetOrders(u User) []Order {
 //TODO refactor auth method
 func (d *DinsApi) GetUser(token string) (User, error) {
 	cookie := http.Cookie{Name: "mydins-auth", Value: token}
-	req, err := http.NewRequest(http.MethodGet, d.apiEndpoint+"/?page=fidel", nil)
+	req, err := http.NewRequest(http.MethodGet, d.Endpoint+"/?page=fidel", nil)
 	if err != nil {
 		return User{}, err
 	}
@@ -106,14 +102,14 @@ func (d *DinsApi) GetUser(token string) (User, error) {
 func (d *DinsApi) SendOrder(basket []string, user User) error {
 	var orders []Meal
 	for _, id := range basket {
-		meal := d.currentMeals[id]
+		meal := d.CurrentMeals[id]
 		meal.Qty = 1
 		orders = append(orders, meal)
 	}
 
 	orderJson, _ := json.Marshal(orders)
 	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "order": {string(orderJson)}, "make_the_order": {"Заказать"}}
-	req, _ := http.NewRequest(http.MethodPost, d.apiEndpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
+	req, _ := http.NewRequest(http.MethodPost, d.Endpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	_, err := d.client.Do(req)
@@ -124,7 +120,7 @@ func (d *DinsApi) SendOrder(basket []string, user User) error {
 
 func (d *DinsApi) CancelOrder(orderID string, user User) error {
 	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "cancel_the_order": {"Отменить"}, "order_id": {orderID}, "order": {""}}
-	req, _ := http.NewRequest(http.MethodPost, d.apiEndpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
+	req, _ := http.NewRequest(http.MethodPost, d.Endpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	_, err := d.client.Do(req)

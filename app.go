@@ -6,25 +6,21 @@ import (
 	"log"
 )
 
-const (
-	botToken = "880777116:AAEOXE6RVHEWzzC0hthVPjwG37WxsUbRy2U" // Prod Bot
-	//botToken     = "987354230:AAGoDDLMxwowUY_wbuz6UCdgtD33eQE_Q4o" // Test_Bot
-	tgEndpoint   = "http://157.230.184.220/bot%s/%s" //proxy to api.telegram.com
-	dinsEndpoint = "https://my.dins.ru"
-)
 
 func main() {
 	log.Println("Starting...")
+	conf := FromFile()
+	log.Println("With config", conf.Json())
 
-	users := NewStore("./data")
+	users := NewStore(conf.Store.Path)
 	defer users.Close()
 
-	bot, err := telegram.NewBotAPI(botToken, tgEndpoint)
-	dinsApi := dins.NewDinsApi(dinsEndpoint)
+	bot, err := telegram.NewBotAPIWithEndpoint(conf.TgToken, conf.TgEndpoint)
+	dinsApi := dins.NewDinsApi(conf.DinsEndpoint)
 	handler := NewHandler(dinsApi, bot, users)
 
 	if err != nil {
-		log.Panic("Failed connect to telegram", err)
+		log.Panic("Failed connect to telegram ", err)
 	}
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
@@ -40,11 +36,11 @@ func main() {
 	for update := range updates {
 		switch m := update; {
 		case m.Message != nil && update.Message.IsCommand():
-			handler.HandleCommand(update.Message)
+			go handler.HandleCommand(update.Message)
 		case m.Message != nil:
-			handler.HandleMessage(update.Message)
+			go handler.HandleMessage(update.Message)
 		case m.CallbackQuery != nil:
-			handler.HandleCallback(update.CallbackQuery)
+			go handler.HandleCallback(update.CallbackQuery)
 		}
 
 	}

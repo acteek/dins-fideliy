@@ -2,8 +2,12 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/acteek/telegram-bot-api v4.6.4+incompatible h1:irxq76PDk0Ilp4Uf18d3uwBEN8geVRoub4hP5n4gffU=
+github.com/acteek/telegram-bot-api v4.6.4+incompatible/go.mod h1:IUQbyS+8f7x/y9Vn20pgU2sC9CBrDjTHZX8YJ76ficw=
 github.com/acteek/telegram-bot-api v4.6.5-0.20190917152410-67c024dc85c4+incompatible h1:fta+VWSEs4XmQpftBz7W3AgWVandwLLpIPilbcWPoHk=
 github.com/acteek/telegram-bot-api v4.6.5-0.20190917152410-67c024dc85c4+incompatible/go.mod h1:IUQbyS+8f7x/y9Vn20pgU2sC9CBrDjTHZX8YJ76ficw=
+github.com/acteek/telegram-bot-api v4.6.5-0.20190926144744-07366fa0b930+incompatible h1:QHFcfJG4xjBAD6rHbX9kLfX/eaFAQHIV+VM8HGHEC1c=
+github.com/acteek/telegram-bot-api v4.6.5-0.20190926144744-07366fa0b930+incompatible/go.mod h1:IUQbyS+8f7x/y9Vn20pgU2sC9CBrDjTHZX8YJ76ficw=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=

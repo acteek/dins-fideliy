@@ -21,7 +21,7 @@ func NewHandler(api *dins.DinsApi, bot *tg.BotAPI, store *Store) *Handler {
 		api:     api,
 		bot:     bot,
 		store:   store,
-		baskets: make(map[int64][]string),
+		baskets: make(map[int64][]string), // TODO use mutex for update basket
 	}
 }
 
@@ -94,7 +94,7 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 				reply.Text = "Ты ничего не заказал"
 			} else {
 				var names []string
-				mealStore := h.api.CurrentMeals()
+				mealStore := h.api.CurrentMeals
 				for _, ord := range orders {
 					names = append(names, mealStore[ord.MealID].Name)
 				}
@@ -119,7 +119,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 	case data == "make_order":
 		if basket, nonEmpty := h.baskets[callback.Message.Chat.ID]; nonEmpty {
 			var names []string
-			mealStore := h.api.CurrentMeals()
+			mealStore := h.api.CurrentMeals
 			for _, id := range basket {
 				names = append(names, mealStore[id].Name)
 			}
@@ -143,7 +143,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 				h.sendReply(delSubmit)
 				if err := h.api.SendOrder(basket, user); err != nil {
 					reply.Text = "Что-то пошло не так"
-					reply.ReplyMarkup = helpers.DinsRedirectKeyBoard(dinsEndpoint, "Заказать на сайте")
+					reply.ReplyMarkup = helpers.DinsRedirectKeyBoard(h.api.Endpoint, "Заказать на сайте")
 				} else {
 					reply.Text = "Заказал для тебя"
 				}
