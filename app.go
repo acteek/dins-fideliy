@@ -2,14 +2,18 @@ package main
 
 import (
 	"fideliy/dins"
+	"flag"
 	telegram "github.com/acteek/telegram-bot-api"
 	"log"
 )
 
-
 func main() {
 	log.Println("Starting...")
-	conf := FromFile()
+	var confPath string
+	flag.StringVar(&confPath, "conf", "./config.json", "config path")
+	flag.Parse()
+
+	conf := FromFile(confPath)
 	log.Println("With config", conf.Json())
 
 	users := NewStore(conf.Store.Path)

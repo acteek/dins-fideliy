@@ -24,15 +24,15 @@ func (c *Config) Json() string {
 
 }
 
-func FromFile() *Config {
-	bytes, err := ioutil.ReadFile("./config.json")
+func FromFile(file string) *Config {
+	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatal("Failed Read ./conf.json", err)
+		log.Fatal("Failed Read "+file+" :", err)
 	}
 	var conf Config
 	pErr := json.Unmarshal(bytes, &conf)
 	if pErr != nil {
-		log.Fatal("Failed Parse ./conf.json", pErr)
+		log.Fatal("Failed Parse"+file+" :", pErr)
 	}
 	return &conf
 
