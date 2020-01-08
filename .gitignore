@@ -4,3 +4,4 @@ data/
 bin/
 fideliy
 .vscode/
+config.json

@@ -27,12 +27,12 @@ func (c *Config) Json() string {
 func FromFile(file string) *Config {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatal("Failed Read "+file+" :", err)
+		log.Fatal("Failed read config, check ./config.json or use flag -conf=/path, err: ", err)
 	}
 	var conf Config
 	pErr := json.Unmarshal(bytes, &conf)
 	if pErr != nil {
-		log.Fatal("Failed Parse"+file+" :", pErr)
+		log.Fatal("Failed parse config: ", pErr)
 	}
 	return &conf
 
