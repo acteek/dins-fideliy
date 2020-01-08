@@ -1,6 +1,6 @@
 {
   "telegram_token": "987354230:AAGoDDLMxwowUY_wbuz6UCdgtD33eQE_Q4o",
-  "telegram_endpoint": "http://157.230.184.220",
+  "telegram_endpoint": "https://tg.acteek.cf",
   "dins_endpoint": "https://my.dins.ru",
   "store": {
     "path": "./data"
