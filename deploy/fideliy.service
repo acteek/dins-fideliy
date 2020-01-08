@@ -5,7 +5,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/home/acteek/fideliy/app
+ExecStart=/home/acteek/fideliy/app -conf=/home/acteek/fideliy/config.json 
 StandardOutput=/home/acteek/fideliy/fideliy.log
 Restart=always
 
