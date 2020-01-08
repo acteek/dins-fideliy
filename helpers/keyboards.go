@@ -17,7 +17,8 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 	var keyboard [][]telegram.InlineKeyboardButton
 
 	orderButton := telegram.NewInlineKeyboardRow(
-		telegram.NewInlineKeyboardButtonData("Перейти в корзину", "make_order"))
+		telegram.NewInlineKeyboardButtonData("Отмена","close_menu"),
+		telegram.NewInlineKeyboardButtonData("В корзину", "make_order"))
 
 	for i := 0; i < len(meals); i++ {
 		row := telegram.NewInlineKeyboardRow(
@@ -34,8 +35,8 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData("Ок", "send_order"),
-			telegram.NewInlineKeyboardButtonData("Я Передумал", "clear_order")))
+			telegram.NewInlineKeyboardButtonData("Я Передумал", "clear_order"),
+			telegram.NewInlineKeyboardButtonData("Ок", "send_order")))
 }
 
 func DinsRedirectKeyBoard(dinsEndpoint string, text string) telegram.InlineKeyboardMarkup {

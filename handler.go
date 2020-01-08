@@ -53,7 +53,7 @@ func (h *Handler) HandleCommand(msg *tg.Message) {
 				if err := h.store.Put(msg.Chat.ID, user); err != nil {
 					reply.Text = "Что то пошло не так попробуй другой"
 				}
-				reply.Text = user.Name + ", добро пожаловать"
+				reply.Text = user.Name + ", добро пожаловать !"
 			}
 
 		} else {
@@ -108,6 +108,7 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 		}
 	default:
 		reply.Text = "🙀😴"
+		reply.ReplyMarkup = helpers.BuildMainKeyboard()
 	}
 
 	h.sendReply(reply)
@@ -157,6 +158,13 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		}
 
 	case data == "clear_order":
+		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош ...")
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+
+		delete(h.baskets, callback.Message.Chat.ID)
+		h.sendReply(reply, del)
+
+	case data == "close_menu":
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош ...")
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 
