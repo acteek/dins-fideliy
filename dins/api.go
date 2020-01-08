@@ -98,16 +98,8 @@ func (d *DinsApi) GetUser(token string) (User, error) {
 
 }
 
-//TODO increment meal.Qty for each meal_id
-func (d *DinsApi) SendOrder(basket []string, user User) error {
-	var orders []Meal
-	for _, id := range basket {
-		meal := d.CurrentMeals[id]
-		meal.Qty = 1
-		orders = append(orders, meal)
-	}
-
-	orderJson, _ := json.Marshal(orders)
+func (d *DinsApi) SendOrder(order []Meal, user User) error {
+	orderJson, _ := json.Marshal(order)
 	values := url.Values{"user_id": {user.ID}, "full_name": {user.Name}, "order": {string(orderJson)}, "make_the_order": {"Заказать"}}
 	req, _ := http.NewRequest(http.MethodPost, d.Endpoint+"/cafe-new/user_order.php", strings.NewReader(values.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

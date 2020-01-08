@@ -6,22 +6,23 @@ import (
 	"fmt"
 	tg "github.com/acteek/telegram-bot-api"
 	"log"
+	"strconv"
 	"strings"
 )
 
 type Handler struct {
-	api     *dins.DinsApi
-	bot     *tg.BotAPI
-	store   *Store
-	baskets map[int64][]string
+	api    *dins.DinsApi
+	bot    *tg.BotAPI
+	store  *Store
+	basket *Basket
 }
 
 func NewHandler(api *dins.DinsApi, bot *tg.BotAPI, store *Store) *Handler {
 	return &Handler{
-		api:     api,
-		bot:     bot,
-		store:   store,
-		baskets: make(map[int64][]string), // TODO use mutex for update basket
+		api:    api,
+		bot:    bot,
+		store:  store,
+		basket: NewBasket(),
 	}
 }
 
@@ -93,13 +94,14 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			if len(orders) == 0 {
 				reply.Text = "Ты ничего не заказал"
 			} else {
-				var names []string
+				var views []string
 				mealStore := h.api.CurrentMeals
 				for _, ord := range orders {
-					names = append(names, mealStore[ord.MealID].Name)
+					view := mealStore[ord.MealID].Name + " X" + ord.Qty
+					views = append(views, view)
 				}
 
-				reply.Text = strings.Join(names, ", ")
+				reply.Text = strings.Join(views, ", ")
 				reply.ReplyMarkup = helpers.BuildCancelOrderKeyBoard(orders[0])
 			}
 
@@ -118,13 +120,13 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 	switch data := callback.Data; {
 	case data == "make_order":
-		if basket, nonEmpty := h.baskets[callback.Message.Chat.ID]; nonEmpty {
-			var names []string
-			mealStore := h.api.CurrentMeals
-			for _, id := range basket {
-				names = append(names, mealStore[id].Name)
+		if order, nonEmpty := h.basket.Get(callback.Message.Chat.ID); nonEmpty {
+			var views []string
+			for _, meal := range order {
+				view := meal.Name + " X" + strconv.Itoa(meal.Qty)
+				views = append(views, view)
 			}
-			submit := tg.NewMessage(callback.Message.Chat.ID, strings.Join(names, ", "))
+			submit := tg.NewMessage(callback.Message.Chat.ID, strings.Join(views, ", "))
 			deleteMenu := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 			submit.ReplyMarkup = helpers.BuildOrderKeyBoard()
 			h.sendReply(submit, deleteMenu)
@@ -134,7 +136,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		}
 
 	case data == "send_order":
-		if basket, nonEmpty := h.baskets[callback.Message.Chat.ID]; nonEmpty {
+		if order, nonEmpty := h.basket.Get(callback.Message.Chat.ID); nonEmpty {
 			reply := tg.NewMessage(callback.Message.Chat.ID, "")
 			user, getErr := h.store.Get(callback.Message.Chat.ID)
 			if getErr != nil {
@@ -142,7 +144,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 			} else {
 				delSubmit := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 				h.sendReply(delSubmit)
-				if err := h.api.SendOrder(basket, user); err != nil {
+				if err := h.api.SendOrder(order, user); err != nil {
 					reply.Text = "Что-то пошло не так"
 					reply.ReplyMarkup = helpers.DinsRedirectKeyBoard(h.api.Endpoint, "Заказать на сайте")
 				} else {
@@ -150,7 +152,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 				}
 			}
 
-			delete(h.baskets, callback.Message.Chat.ID)
+			h.basket.Delete(callback.Message.Chat.ID)
 			h.sendReply(reply)
 
 		} else {
@@ -161,15 +163,12 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош ...")
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 
-		delete(h.baskets, callback.Message.Chat.ID)
+		h.basket.Delete(callback.Message.Chat.ID)
 		h.sendReply(reply, del)
 
 	case data == "close_menu":
-		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош ...")
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
-
-		delete(h.baskets, callback.Message.Chat.ID)
-		h.sendReply(reply, del)
+		h.sendReply(del)
 
 	case strings.Contains(data, "cancel_order"):
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош...")
@@ -185,10 +184,11 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 			h.sendReply(reply, del)
 		}
 
+	// if didn't math any comands callback.Data contains itemId
 	default:
-		h.baskets[callback.Message.Chat.ID] =
-			append(h.baskets[callback.Message.Chat.ID], callback.Data)
-
+		meal := h.api.CurrentMeals[callback.Data]
+		meal.Qty = 1
+		h.basket.Add(callback.Message.Chat.ID, meal)
 		h.callbackReply(callback, "Добавил в корзину")
 	}
 
