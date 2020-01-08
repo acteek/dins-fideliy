@@ -1,8 +1,0 @@
-{
-  "telegram_token": "my_awesome_token",
-  "telegram_endpoint": "https://example.com",
-  "dins_endpoint": "https://example.com",
-  "store": {
-    "path": "/data"
-  }
-}
