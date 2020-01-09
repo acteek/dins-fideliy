@@ -168,6 +168,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 
 	case data == "close_menu":
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		h.basket.Delete(callback.Message.Chat.ID)
 		h.sendReply(del)
 
 	case strings.Contains(data, "cancel_order"):
@@ -187,7 +188,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 	// if didn't math any comands callback.Data contains itemId
 	default:
 		meal := h.api.CurrentMeals[callback.Data]
-		meal.Qty = 1
+		meal.Qty = 1 // I can order only one item per iteration
 		h.basket.Add(callback.Message.Chat.ID, meal)
 		h.callbackReply(callback, "Добавил в корзину")
 	}

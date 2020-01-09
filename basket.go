@@ -7,11 +7,12 @@ import (
 
 type ChatId = int64
 type ItemId = string
+type Order = map[ItemId]dins.Meal
 
 type Basket struct {
 	Actions
 	mx   sync.RWMutex
-	data map[ChatId][]dins.Meal
+	data map[ChatId]Order
 }
 
 type Actions interface {
@@ -21,23 +22,34 @@ type Actions interface {
 }
 
 func NewBasket() *Basket {
-	return &Basket{data: make(map[ChatId][]dins.Meal)}
+	return &Basket{data: make(map[ChatId]Order)}
 
 }
 
-//TODO implement increment Qty
 func (b *Basket) Add(chatId ChatId, meal dins.Meal) {
 	b.mx.Lock()
 	defer b.mx.Unlock()
 
-	meals := b.data[chatId]
-	b.data[chatId] = append(meals, meal)
+	if order, has := b.data[chatId]; has {
+		meal.Qty += order[meal.ID].Qty
+		order[meal.ID] = meal
+	} else {
+		b.data[chatId] = Order{meal.ID: meal}
+	}
+
 }
 
 func (b *Basket) Get(chatId ChatId) ([]dins.Meal, bool) {
 	b.mx.RLock()
 	defer b.mx.RUnlock()
-	meals, has := b.data[chatId]
+
+	order, has := b.data[chatId]
+	var meals []dins.Meal
+	for _, meal := range order {
+		if meal.Qty > 0 {
+			meals = append(meals, meal)
+		}
+	}
 
 	return meals, has
 }
