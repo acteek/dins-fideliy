@@ -5,3 +5,4 @@ bin/
 fideliy
 .vscode/
 config.json
+go.sum

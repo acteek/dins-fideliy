@@ -76,9 +76,11 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 	switch msg.Text {
 	case "Меню":
 		if user, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
-			menu := h.api.GetMenu(user)
+			menu, hasOrder := h.api.GetMenu(user)
 			if len(menu) == 0 {
 				reply.Text = "Сейчас меню не доступно, попробуй позже"
+			} else if hasOrder {
+				reply.Text = "Ты уже сделал заказ, используй \"Мои заказы\""
 			} else {
 				reply.Text = "Вооот"
 				reply.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)

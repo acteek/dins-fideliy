@@ -39,17 +39,17 @@ func currentMeals(apiEndpoint string) (map[string]Meal, error) {
 	return data.Meals, nil
 }
 
-func (d *DinsApi) GetMenu(u User) []Meal {
+func (d *DinsApi) GetMenu(u User) ([]Meal, bool) {
 	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	data := ParseResponse(resp)
-	if !data.isAbleToOrder || len(data.Orders) > 0 {
-		return []Meal{}
+	if !data.isAbleToOrder {
+		return []Meal{}, false
 	} else {
-		return data.Menu
+		return data.Menu, len(data.Orders) > 0
 	}
 
 }
