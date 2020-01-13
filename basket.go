@@ -5,45 +5,43 @@ import (
 	"sync"
 )
 
-type ChatId = int64
-type ItemId = string
-type Order = map[ItemId]dins.Meal
+type chatID = int64
+type itemID = string
+type order = map[itemID]dins.Meal
 
+//Basket is a struct wraper for basket map
 type Basket struct {
-	Actions
 	mx   sync.RWMutex
-	data map[ChatId]Order
+	data map[chatID]order
 }
 
-type Actions interface {
-	Add(chatId ChatId, meal dins.Meal)
-	Get(chatId ChatId) ([]dins.Meal, bool)
-	Delete(chatId ChatId)
-}
 
+// NewBasket init  new empty basket
 func NewBasket() *Basket {
-	return &Basket{data: make(map[ChatId]Order)}
+	return &Basket{data: make(map[chatID]order)}
 
 }
 
-func (b *Basket) Add(chatId ChatId, meal dins.Meal) {
+//Add meal to basket for chatID
+func (b *Basket) Add(chatID chatID, meal dins.Meal) {
 	b.mx.Lock()
 	defer b.mx.Unlock()
 
-	if order, has := b.data[chatId]; has {
-		meal.Qty += order[meal.ID].Qty
-		order[meal.ID] = meal
+	if prev, has := b.data[chatID]; has {
+		meal.Qty += prev[meal.ID].Qty
+		prev[meal.ID] = meal
 	} else {
-		b.data[chatId] = Order{meal.ID: meal}
+		b.data[chatID] = order{meal.ID: meal}
 	}
 
 }
 
-func (b *Basket) Get(chatId ChatId) ([]dins.Meal, bool) {
+//Get order form basket for chatID
+func (b *Basket) Get(chatID chatID) ([]dins.Meal, bool) {
 	b.mx.RLock()
 	defer b.mx.RUnlock()
 
-	order, has := b.data[chatId]
+	order, has := b.data[chatID]
 	var meals []dins.Meal
 	for _, meal := range order {
 		if meal.Qty > 0 {
@@ -54,8 +52,9 @@ func (b *Basket) Get(chatId ChatId) ([]dins.Meal, bool) {
 	return meals, has
 }
 
-func (b *Basket) Delete(chatId ChatId) {
+//Delete order form basket for chatID
+func (b *Basket) Delete(chatID chatID) {
 	b.mx.Lock()
 	defer b.mx.Unlock()
-	delete(b.data, chatId)
+	delete(b.data, chatID)
 }

@@ -14,7 +14,7 @@ func main() {
 	flag.Parse()
 
 	conf := FromFile(confPath)
-	log.Println("With config", conf.Json())
+	log.Println("With config", conf.JSON())
 
 	users := NewStore(conf.Store.Path)
 	defer users.Close()

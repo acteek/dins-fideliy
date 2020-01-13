@@ -6,24 +6,27 @@ import (
 	"log"
 )
 
-type StoreConf struct {
+type storeConf struct {
 	Path string `json:"path"`
 }
 
+// Config struct
 type Config struct {
 	TgToken      string    `json:"telegram_token"`
 	TgEndpoint   string    `json:"telegram_endpoint"`
 	DinsEndpoint string    `json:"dins_endpoint"`
-	Store        StoreConf `json:"store"`
+	Store        storeConf `json:"store"`
 }
 
-func (c *Config) Json() string {
+//JSON view for config struct
+func (c *Config) JSON() string {
 	bytes, _ := json.Marshal(c)
 
 	return string(bytes)
 
 }
 
+// FromFile read a config form json file
 func FromFile(file string) *Config {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
