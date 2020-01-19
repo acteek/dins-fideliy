@@ -17,16 +17,16 @@ type DinsApi struct {
 	CurrentMeals map[string]Meal
 }
 
-func NewDinsApi(apiEndpoint string) *DinsApi {
-	mealStore, err := currentMeals(apiEndpoint)
-	if err != nil {
-		log.Fatal("Failed connect to dins ", apiEndpoint, err)
-	}
+func NewDinsAPI(apiEndpoint string) *DinsApi {
+	// mealStore, err := currentMeals(apiEndpoint)
+	// if err != nil {
+	// log.Fatal("Failed connect to dins ", apiEndpoint, err)
+	// }
 
 	return &DinsApi{
 		Endpoint:     apiEndpoint,
 		client:       &http.Client{},
-		CurrentMeals: mealStore,
+		CurrentMeals: map[string]Meal{},
 	}
 }
 

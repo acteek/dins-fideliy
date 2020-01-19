@@ -20,8 +20,9 @@ func main() {
 	defer users.Close()
 
 	bot, err := telegram.NewBotAPIWithEndpoint(conf.TgToken, conf.TgEndpoint)
-	dinsApi := dins.NewDinsApi(conf.DinsEndpoint)
-	handler := NewHandler(dinsApi, bot, users)
+	dinsAPI := dins.NewDinsAPI(conf.DinsEndpoint)
+	handler := NewHandler(dinsAPI, bot, users)
+	publisher := NewPublisher(dinsAPI, bot, users)
 
 	if err != nil {
 		log.Panic("Failed connect to telegram ", err)
@@ -37,11 +38,14 @@ func main() {
 		log.Panic("Failed to get updates from telegram")
 	}
 
+	publisher.Start()
+
 	for update := range updates {
 		switch m := update; {
 		case m.Message != nil && update.Message.IsCommand():
 			go handler.HandleCommand(update.Message)
 		case m.Message != nil:
+			publisher.Ch <- m.Message.Text
 			go handler.HandleMessage(update.Message)
 		case m.CallbackQuery != nil:
 			go handler.HandleCallback(update.CallbackQuery)

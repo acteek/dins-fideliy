@@ -3,6 +3,7 @@ package dins
 import (
 	"encoding/json"
 	"log"
+	"time"
 )
 
 type Meal struct {
@@ -28,8 +29,9 @@ type MenuResponse struct {
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID            string               `json:"id"`
+	Name          string               `json:"name"`
+	Subscriptions map[string]time.Time `json:"subscriptions"`
 }
 
 func (u *User) GetBytes() []byte {

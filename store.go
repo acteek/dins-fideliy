@@ -52,6 +52,10 @@ func (s *Store) Has(chatId int64) bool {
 	return s.db.Has(byteOf(chatId))
 }
 
+func (s *Store) Keys() chan []byte {
+	return s.db.Keys()
+}
+
 func (s *Store) Close() {
 	if err := s.db.Close(); err != nil {
 		log.Println("Close Store failed: ", err)
