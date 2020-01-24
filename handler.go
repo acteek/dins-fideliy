@@ -90,7 +90,7 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			reply.Text = "Ты кто такой ...? Используй: /set_token your-token"
 		}
 
-	case "Мои заказы":
+	case "Заказы":
 		if user, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
 			orders := h.api.GetOrders(user)
 			if len(orders) == 0 {
@@ -106,6 +106,15 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 				reply.Text = strings.Join(views, ", ")
 				reply.ReplyMarkup = helpers.BuildCancelOrderKeyBoard(orders[0])
 			}
+
+		} else {
+			reply.Text = "Ты кто такой ...? Используй: /set_token your-token"
+		}
+	case "Подписки":
+		if _, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
+
+			reply.Text = "Можно подписаться на все меню или конкретное блюдо "
+			reply.ReplyMarkup = helpers.BuildSubKeyBoard()
 
 		} else {
 			reply.Text = "Ты кто такой ...? Используй: /set_token your-token"

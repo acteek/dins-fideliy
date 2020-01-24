@@ -8,7 +8,8 @@ import (
 func BuildMainKeyboard() telegram.ReplyKeyboardMarkup {
 	return telegram.NewReplyKeyboard(
 		telegram.NewKeyboardButtonRow(
-			telegram.NewKeyboardButton("Мои заказы"),
+			telegram.NewKeyboardButton("Подписки"),
+			telegram.NewKeyboardButton("Заказы"),
 			telegram.NewKeyboardButton("Меню"),
 		))
 }
@@ -17,7 +18,7 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 	var keyboard [][]telegram.InlineKeyboardButton
 
 	orderButton := telegram.NewInlineKeyboardRow(
-		telegram.NewInlineKeyboardButtonData("Отмена","close_menu"),
+		telegram.NewInlineKeyboardButtonData("Отмена", "close_menu"),
 		telegram.NewInlineKeyboardButtonData("В корзину", "make_order"),
 	)
 
@@ -39,6 +40,17 @@ func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 			telegram.NewInlineKeyboardButtonData("Я Передумал", "clear_order"),
 			telegram.NewInlineKeyboardButtonData("Ок", "send_order"),
 		))
+}
+
+func BuildSubKeyBoard() telegram.InlineKeyboardMarkup {
+	return telegram.NewInlineKeyboardMarkup(
+		telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData("Подписаться", "make_subscription")),
+		telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData("Отписаться", "cancel_subscription")),
+		telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData("Отмена", "close")),
+	)
 }
 
 func DinsRedirectKeyBoard(dinsEndpoint string, text string) telegram.InlineKeyboardMarkup {

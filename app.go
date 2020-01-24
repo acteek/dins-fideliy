@@ -3,8 +3,9 @@ package main
 import (
 	"fideliy/dins"
 	"flag"
-	telegram "github.com/acteek/telegram-bot-api"
 	"log"
+
+	telegram "github.com/acteek/telegram-bot-api"
 )
 
 func main() {
@@ -45,7 +46,10 @@ func main() {
 		case m.Message != nil && update.Message.IsCommand():
 			go handler.HandleCommand(update.Message)
 		case m.Message != nil:
-			publisher.Ch <- m.Message.Text
+			publisher.Ch <- Subscription{
+				ChatID: m.Message.Chat.ID,
+				Action: Delete,
+			}
 			go handler.HandleMessage(update.Message)
 		case m.CallbackQuery != nil:
 			go handler.HandleCallback(update.CallbackQuery)
