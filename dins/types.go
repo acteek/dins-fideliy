@@ -3,9 +3,10 @@ package dins
 import (
 	"encoding/json"
 	"log"
-	"time"
+	t "time"
 )
 
+//Meal describes a meal from dinsAPI
 type Meal struct {
 	ID      string      `json:"id"`
 	Type    string      `json:"type"`
@@ -16,11 +17,14 @@ type Meal struct {
 	Qty     int         `json:"qty"` // number orders
 }
 
+//Order describes a order from dinsAPI
 type Order struct {
 	ID     string `json:"order_id"`
 	MealID string `json:"meal_id"`
 	Qty    string `json:"qty"`
 }
+
+//MenuResponse common struct for parsse response
 type MenuResponse struct {
 	isAbleToOrder bool
 	Meals         map[string]Meal
@@ -28,12 +32,24 @@ type MenuResponse struct {
 	Orders        []Order
 }
 
+//Subs = map[categotyName]LastTimeTrigered
+type Subs = map[string]t.Time
+
+/*
+User has user data field.
+Save to store by telegram chatId
+
+ID   - Dins Domain ID
+Name - Dins Domain Name
+Subs - Active subscriptions for user
+*/
 type User struct {
-	ID            string               `json:"id"`
-	Name          string               `json:"name"`
-	Subscriptions map[string]time.Time `json:"subscriptions"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Subs Subs   `json:"subscriptions"`
 }
 
+//GetBytes wraper for Serialization User struct
 func (u *User) GetBytes() []byte {
 	bytes, ParsErr := json.Marshal(u)
 	if ParsErr != nil {

@@ -8,10 +8,12 @@ import (
 	"log"
 )
 
+//Store it's a wraper for Bitcask store 
 type Store struct {
 	db *bitcask.Bitcask
 }
 
+//NewStore returns new Store instance
 func NewStore(path string) *Store {
 	db, err := bitcask.Open(path)
 	if err != nil {
@@ -27,14 +29,16 @@ func byteOf(key int64) []byte {
 	return bytes
 }
 
-func (s *Store) Put(chatId int64, user dins.User) error {
-	err := s.db.Put(byteOf(chatId), user.GetBytes())
+//Put user into store by telegram chatID 
+func (s *Store) Put(chatID int64, user dins.User) error {
+	err := s.db.Put(byteOf(chatID), user.GetBytes())
 	return err
 }
 
-func (s *Store) Get(chatId int64) (dins.User, error) {
+//Get user from store by telegram chatID
+func (s *Store) Get(chatID int64) (dins.User, error) {
 	parsed := dins.User{}
-	bytes, err := s.db.Get(byteOf(chatId))
+	bytes, err := s.db.Get(byteOf(chatID))
 	if err != nil {
 		log.Println("Read User failed: ", err)
 		return dins.User{}, err
@@ -48,14 +52,17 @@ func (s *Store) Get(chatId int64) (dins.User, error) {
 	return parsed, nil
 }
 
-func (s *Store) Has(chatId int64) bool {
-	return s.db.Has(byteOf(chatId))
+//Has return true if Store has a user
+func (s *Store) Has(chatID int64) bool {
+	return s.db.Has(byteOf(chatID))
 }
 
+//Keys return channel with all telegramm chatIds
 func (s *Store) Keys() chan []byte {
 	return s.db.Keys()
 }
 
+//Close gracefully close store
 func (s *Store) Close() {
 	if err := s.db.Close(); err != nil {
 		log.Println("Close Store failed: ", err)

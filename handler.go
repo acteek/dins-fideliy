@@ -10,14 +10,16 @@ import (
 	"strings"
 )
 
+//Handler describes all methods for handle message from telegram
 type Handler struct {
-	api    *dins.DinsApi
+	api    *dins.API
 	bot    *tg.BotAPI
 	store  *Store
 	basket *Basket
 }
 
-func NewHandler(api *dins.DinsApi, bot *tg.BotAPI, store *Store) *Handler {
+//NewHandler returns new Handler instance 
+func NewHandler(api *dins.API, bot *tg.BotAPI, store *Store) *Handler {
 	return &Handler{
 		api:    api,
 		bot:    bot,
@@ -39,7 +41,7 @@ func (h *Handler) callbackReply(cb *tg.CallbackQuery, text string) {
 		log.Println("Failed send answer callback to telegram", err)
 	}
 }
-
+//HandleCommand handles telegram commands
 func (h *Handler) HandleCommand(msg *tg.Message) {
 	reply := tg.NewMessage(msg.Chat.ID, "")
 	switch msg.Command() {
@@ -71,6 +73,7 @@ func (h *Handler) HandleCommand(msg *tg.Message) {
 
 }
 
+//HandleMessage handles telegram messages
 func (h *Handler) HandleMessage(msg *tg.Message) {
 	reply := tg.NewMessage(msg.Chat.ID, "")
 	switch msg.Text {
@@ -128,6 +131,7 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 
 }
 
+//HandleCallback handles callbacks from keyboards
 func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 	switch data := callback.Data; {
 	case data == "make_order":
