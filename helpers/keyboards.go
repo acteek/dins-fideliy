@@ -10,7 +10,7 @@ func BuildMainKeyboard() telegram.ReplyKeyboardMarkup {
 	return telegram.NewReplyKeyboard(
 		telegram.NewKeyboardButtonRow(
 			telegram.NewKeyboardButton("Подписки"),
-			telegram.NewKeyboardButton("Заказы"),
+			telegram.NewKeyboardButton("Мои Заказы"),
 			telegram.NewKeyboardButton("Меню"),
 		))
 }
@@ -49,8 +49,8 @@ func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 func BuildSubKeyBoard() telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData("Подписаться", "make_subscription"),
-			telegram.NewInlineKeyboardButtonData("Отписаться", "cancel_subscription"),
+			telegram.NewInlineKeyboardButtonData("🔔 Подписаться", "make_subscription"),
+			telegram.NewInlineKeyboardButtonData("🔕 Отписаться", "cancel_subscription"),
 		),
 		telegram.NewInlineKeyboardRow(
 			telegram.NewInlineKeyboardButtonData("❌ Отмена", "close")),

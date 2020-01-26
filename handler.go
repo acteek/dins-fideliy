@@ -93,7 +93,7 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			reply.Text = "Ты кто такой ...? Используй: /set_token your-token"
 		}
 
-	case "Заказы":
+	case "Мои Заказы":
 		if user, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
 			orders := h.api.GetOrders(user)
 			if len(orders) == 0 {
