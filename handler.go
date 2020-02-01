@@ -2,8 +2,7 @@ package main
 
 import (
 	"fideliy/dins"
-	"fideliy/helpers"
-	"fmt"
+	hp "fideliy/helpers"
 	tg "github.com/acteek/telegram-bot-api"
 	"log"
 	"strconv"
@@ -18,7 +17,7 @@ type Handler struct {
 	basket *Basket
 }
 
-//NewHandler returns new Handler instance 
+//NewHandler returns new Handler instance
 func NewHandler(api *dins.API, bot *tg.BotAPI, store *Store) *Handler {
 	return &Handler{
 		api:    api,
@@ -31,7 +30,7 @@ func NewHandler(api *dins.API, bot *tg.BotAPI, store *Store) *Handler {
 func (h *Handler) sendReply(reply ...tg.Chattable) {
 	for _, answer := range reply {
 		if _, err := h.bot.Send(answer); err != nil {
-			fmt.Println("Failed send message to telegram ", err)
+			log.Println("Failed send message to telegram ", err)
 		}
 	}
 }
@@ -41,6 +40,7 @@ func (h *Handler) callbackReply(cb *tg.CallbackQuery, text string) {
 		log.Println("Failed send answer callback to telegram", err)
 	}
 }
+
 //HandleCommand handles telegram commands
 func (h *Handler) HandleCommand(msg *tg.Message) {
 	reply := tg.NewMessage(msg.Chat.ID, "")
@@ -64,7 +64,7 @@ func (h *Handler) HandleCommand(msg *tg.Message) {
 		}
 	case "start":
 		reply.Text = "Привет. Для авторизации используй \n /set_token {mydins-auth cookie c my.dins.ru}"
-		reply.ReplyMarkup = helpers.BuildMainKeyboard()
+		reply.ReplyMarkup = hp.BuildMainKeyboard()
 	default:
 		reply.Text = "Я не знаю такой команды"
 	}
@@ -76,9 +76,10 @@ func (h *Handler) HandleCommand(msg *tg.Message) {
 //HandleMessage handles telegram messages
 func (h *Handler) HandleMessage(msg *tg.Message) {
 	reply := tg.NewMessage(msg.Chat.ID, "")
-	switch msg.Text {
-	case "Меню":
-		if user, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
+	if user, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
+
+		switch msg.Text {
+		case "Меню":
 			menu, hasOrder := h.api.GetMenu(user)
 			if len(menu) == 0 {
 				reply.Text = "Сейчас меню не доступно, попробуй позже"
@@ -86,15 +87,10 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 				reply.Text = "Ты уже сделал заказ, используй \"Мои заказы\""
 			} else {
 				reply.Text = "Вооот"
-				reply.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
+				reply.ReplyMarkup = hp.BuildMenuKeyBoard(menu)
 			}
 
-		} else {
-			reply.Text = "Ты кто такой ...? Используй: /set_token your-token"
-		}
-
-	case "Мои Заказы":
-		if user, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
+		case "Мои Заказы":
 			orders := h.api.GetOrders(user)
 			if len(orders) == 0 {
 				reply.Text = "Ты ничего не заказал"
@@ -102,29 +98,24 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 				var views []string
 				mealStore := h.api.CurrentMeals
 				for _, ord := range orders {
-					view := mealStore[ord.MealID].Name + " X" + ord.Qty
+					view := mealStore[ord.MealID].Name + " " + ord.Qty + "шт."
 					views = append(views, view)
 				}
 
 				reply.Text = strings.Join(views, ", ")
-				reply.ReplyMarkup = helpers.BuildCancelOrderKeyBoard(orders[0])
+				reply.ReplyMarkup = hp.BuildCancelOrderKeyBoard(orders[0])
 			}
 
-		} else {
-			reply.Text = "Ты кто такой ...? Используй: /set_token your-token"
-		}
-	case "Подписки":
-		if _, getErr := h.store.Get(msg.Chat.ID); getErr == nil {
-
+		case "Подписки":
 			reply.Text = "Можно подписаться на все меню или конкретное блюдо "
-			reply.ReplyMarkup = helpers.BuildSubKeyBoard()
+			reply.ReplyMarkup = hp.BuildSubKeyBoard()
 
-		} else {
-			reply.Text = "Ты кто такой ...? Используй: /set_token your-token"
+		default:
+			reply.Text = "🙀😴"
+			reply.ReplyMarkup = hp.BuildMainKeyboard()
 		}
-	default:
-		reply.Text = "🙀😴"
-		reply.ReplyMarkup = helpers.BuildMainKeyboard()
+	} else {
+		reply.Text = "Ты кто такой ...? Используй: /set_token your-token"
 	}
 
 	h.sendReply(reply)
@@ -134,23 +125,23 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 //HandleCallback handles callbacks from keyboards
 func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 	switch data := callback.Data; {
-	case data == "make_order":
+	case data == hp.MakeOrder:
 		if order, nonEmpty := h.basket.Get(callback.Message.Chat.ID); nonEmpty {
 			var views []string
 			for _, meal := range order {
-				view := meal.Name + " X" + strconv.Itoa(meal.Qty)
+				view := meal.Name + " " + strconv.Itoa(meal.Qty) + "шт."
 				views = append(views, view)
 			}
 			submit := tg.NewMessage(callback.Message.Chat.ID, strings.Join(views, ", "))
 			deleteMenu := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
-			submit.ReplyMarkup = helpers.BuildOrderKeyBoard()
+			submit.ReplyMarkup = hp.BuildOrderKeyBoard()
 			h.sendReply(submit, deleteMenu)
 
 		} else {
 			h.callbackReply(callback, "Ты ничего не выбрал")
 		}
 
-	case data == "send_order":
+	case data == hp.SendOrder:
 		if order, nonEmpty := h.basket.Get(callback.Message.Chat.ID); nonEmpty {
 			reply := tg.NewMessage(callback.Message.Chat.ID, "")
 			user, getErr := h.store.Get(callback.Message.Chat.ID)
@@ -161,7 +152,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 				h.sendReply(delSubmit)
 				if err := h.api.SendOrder(order, user); err != nil {
 					reply.Text = "Что-то пошло не так"
-					reply.ReplyMarkup = helpers.DinsRedirectKeyBoard(h.api.Endpoint, "Заказать на сайте")
+					reply.ReplyMarkup = hp.DinsRedirectKeyBoard(h.api.Endpoint, "Заказать на сайте")
 				} else {
 					reply.Text = "Заказал для тебя"
 				}
@@ -174,38 +165,42 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 			h.callbackReply(callback, "Ты ничего не выбрал")
 		}
 
-	case data == "clear_order":
+	case data == hp.ClearOrder:
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош ...")
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 
 		h.basket.Delete(callback.Message.Chat.ID)
 		h.sendReply(reply, del)
 
-	case data == "close_menu":
+	case data == hp.CloseMenu:
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 		h.basket.Delete(callback.Message.Chat.ID)
 		h.sendReply(del)
 
-	case strings.Contains(data, "cancel_order"):
+	case strings.Contains(data, hp.CancelOrder):
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош...")
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 
-		orderID := strings.Split(data, ":")[1]
+		orderID := hp.ParseValue(data)
 		user, _ := h.store.Get(callback.Message.Chat.ID)
 
 		if err := h.api.CancelOrder(orderID, user); err != nil {
-			reply.Text = " Что то пошло не так, попробуй позже"
+			reply.Text = "Что то пошло не так, попробуй позже"
 			h.sendReply(reply)
 		} else {
 			h.sendReply(reply, del)
 		}
 
-	// if didn't math any comands callback.Data contains itemId
-	default:
-		meal := h.api.CurrentMeals[callback.Data]
+	case strings.Contains(data, hp.Order):
+		mealID := hp.ParseValue(data)
+		meal := h.api.CurrentMeals[mealID]
 		meal.Qty = 1 // I can order only one item per iteration
 		h.basket.Add(callback.Message.Chat.ID, meal)
 		h.callbackReply(callback, "Добавил в корзину")
+
+	default:
+		log.Println("Don't match callback comand: ", data)
+
 	}
 
 }

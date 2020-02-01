@@ -9,7 +9,7 @@ import (
 func BuildMainKeyboard() telegram.ReplyKeyboardMarkup {
 	return telegram.NewReplyKeyboard(
 		telegram.NewKeyboardButtonRow(
-			telegram.NewKeyboardButton("Подписки"),
+			// telegram.NewKeyboardButton("Подписки"),
 			telegram.NewKeyboardButton("Мои Заказы"),
 			telegram.NewKeyboardButton("Меню"),
 		))
@@ -20,13 +20,13 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 	var keyboard [][]telegram.InlineKeyboardButton
 
 	orderButton := telegram.NewInlineKeyboardRow(
-		telegram.NewInlineKeyboardButtonData("❌ Отмена", "close_menu"),
-		telegram.NewInlineKeyboardButtonData("✅ В корзину", "make_order"),
+		telegram.NewInlineKeyboardButtonData("❌ Отмена", CloseMenu),
+		telegram.NewInlineKeyboardButtonData("✅ В корзину", MakeOrder),
 	)
 
 	for i := 0; i < len(meals); i++ {
 		row := telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData(meals[i].Name, meals[i].ID))
+			telegram.NewInlineKeyboardButtonData(meals[i].Name, Order+meals[i].ID))
 		keyboard = append(keyboard, row)
 
 	}
@@ -40,8 +40,8 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData("❌ Я Передумал", "clear_order"),
-			telegram.NewInlineKeyboardButtonData("✅ Ок", "send_order"),
+			telegram.NewInlineKeyboardButtonData("❌ Я Передумал", ClearOrder),
+			telegram.NewInlineKeyboardButtonData("✅ Ок", SendOrder),
 		))
 }
 
@@ -49,11 +49,11 @@ func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 func BuildSubKeyBoard() telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData("🔔 Подписаться", "make_subscription"),
-			telegram.NewInlineKeyboardButtonData("🔕 Отписаться", "cancel_subscription"),
+			telegram.NewInlineKeyboardButtonData("🔔 Подписаться", MakeSubs),
+			telegram.NewInlineKeyboardButtonData("🔕 Отписаться", CancelSubs),
 		),
 		telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData("❌ Отмена", "close")),
+			telegram.NewInlineKeyboardButtonData("❌ Отмена", Close)),
 	)
 }
 
@@ -69,6 +69,6 @@ func DinsRedirectKeyBoard(dinsEndpoint string, text string) telegram.InlineKeybo
 func BuildCancelOrderKeyBoard(order dins.Order) telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData("Отменить", "cancel_order:"+order.ID)))
+			telegram.NewInlineKeyboardButtonData("Отменить", CancelOrder+order.ID)))
 
 }

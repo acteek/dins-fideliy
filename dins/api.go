@@ -26,15 +26,15 @@ type API struct {
 
 // NewDinsAPI constructor for create new API instance
 func NewDinsAPI(apiEndpoint string) *API {
-	// mealStore, err := currentMeals(apiEndpoint)
-	// if err != nil {
-	// log.Fatal("Failed connect to dins ", apiEndpoint, err)
-	// }
+	mealStore, err := currentMeals(apiEndpoint)
+	if err != nil {
+	log.Fatal("Failed connect to dins ", apiEndpoint, err)
+	}
 
 	return &API{
 		Endpoint:     apiEndpoint,
 		client:       &http.Client{},
-		CurrentMeals: map[string]Meal{},
+		CurrentMeals: mealStore,
 	}
 }
 
@@ -51,7 +51,7 @@ func currentMeals(apiEndpoint string) (map[string]Meal, error) {
 func (d *API) GetMenu(u User) ([]Meal, bool) {
 	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 	}
 
 	data := ParseResponse(resp)
@@ -67,7 +67,7 @@ func (d *API) GetMenu(u User) ([]Meal, bool) {
 func (d *API) GetOrders(u User) []Order {
 	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 	}
 
 	data := ParseResponse(resp)
@@ -85,7 +85,7 @@ func (d *API) GetUser(token string) (User, error) {
 	resp, err := d.client.Do(req)
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 	}
 
 	defer resp.Body.Close()
