@@ -15,7 +15,6 @@ type Basket struct {
 	data map[chatID]order
 }
 
-
 // NewBasket init  new empty basket
 func NewBasket() *Basket {
 	return &Basket{data: make(map[chatID]order)}

@@ -48,6 +48,7 @@ func parseAbleToOrder(check gjson.Result) bool {
 	return value
 }
 
+// ParseResponse parse response fro Dins Api
 func ParseResponse(resp *http.Response) MenuResponse {
 	bytes, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()

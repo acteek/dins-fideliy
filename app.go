@@ -3,8 +3,9 @@ package main
 import (
 	"fideliy/dins"
 	"flag"
-	telegram "github.com/acteek/telegram-bot-api"
 	"log"
+
+	telegram "github.com/acteek/telegram-bot-api"
 )
 
 func main() {
@@ -20,8 +21,9 @@ func main() {
 	defer users.Close()
 
 	bot, err := telegram.NewBotAPIWithEndpoint(conf.TgToken, conf.TgEndpoint)
-	dinsApi := dins.NewDinsApi(conf.DinsEndpoint)
-	handler := NewHandler(dinsApi, bot, users)
+	dinsAPI := dins.NewDinsAPI(conf.DinsEndpoint)
+	handler := NewHandler(dinsAPI, bot, users)
+	// publisher := NewPublisher(dinsAPI, bot, users)
 
 	if err != nil {
 		log.Panic("Failed connect to telegram ", err)
@@ -36,6 +38,8 @@ func main() {
 	if err != nil {
 		log.Panic("Failed to get updates from telegram")
 	}
+
+	// publisher.Start()
 
 	for update := range updates {
 		switch m := update; {
