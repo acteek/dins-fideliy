@@ -54,7 +54,7 @@ func (p *Publisher) Start() {
 					tasks[event.ChatID] = done
 					p.subscriptionTask(event.ChatID, done)
 				} else {
-					log.Println("Task already created cahtID ", event.ChatID)
+					log.Println("Task already created ChatID ", event.ChatID)
 				}
 
 			case Delete:
