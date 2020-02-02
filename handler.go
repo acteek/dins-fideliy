@@ -69,6 +69,36 @@ func (h *Handler) HandleCommand(msg *tg.Message) {
 	case "start":
 		reply.Text = "Привет. Для авторизации используй \n /set_token {mydins-auth cookie c my.dins.ru}"
 		reply.ReplyMarkup = hp.BuildMainKeyboard()
+	case "stats":
+		if msg.From.UserName == "acteek" {
+			var count int
+			for chat := range h.store.ChatIDs() {
+				if chat == 0 {
+					break
+				}
+				count++
+			}
+
+			reply.Text = strconv.Itoa(count)
+		}
+	case "update":
+		m := strings.Split(msg.Text, ":")
+		if msg.From.UserName == "acteek" && len(m) >= 2 {
+			message := m[1]
+
+			for chatID := range h.store.ChatIDs() {
+				update := tg.NewMessage(chatID, message)
+				h.sendReply(update)
+
+			}
+
+			reply.Text = "Обновление отправлено"
+
+		}
+
+	case "up":
+		reply.Text = "🙀😴"
+		reply.ReplyMarkup = hp.BuildMainKeyboard()
 	default:
 		reply.Text = "Я не знаю такой команды"
 	}

@@ -26,11 +26,10 @@ type API struct {
 
 // NewDinsAPI constructor for create new API instance
 func NewDinsAPI(apiEndpoint string) *API {
-	// mealStore, err := currentMeals(apiEndpoint)
-	mealStore := map[string]Meal{}
-	// if err != nil {
-	// log.Fatal("Failed connect to dins ", apiEndpoint, err)
-	// }
+	mealStore, err := currentMeals(apiEndpoint)
+	if err != nil {
+		log.Fatal("Failed connect to dins ", apiEndpoint, err)
+	}
 
 	return &API{
 		Endpoint:     apiEndpoint,

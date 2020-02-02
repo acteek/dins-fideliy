@@ -92,12 +92,14 @@ func (p *Publisher) subscriptionTask(chatID int64, done chan string) {
 
 				if contains(active, "Все Меню") {
 					menu, _ := p.api.GetMenu(user)
-					msg := tg.NewMessage(chatID, "Меню по подписке")
-					msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
-					p.sendReply(msg)
+					if len(menu) > 0 {
+						msg := tg.NewMessage(chatID, "Меню по подписке")
+						msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
+						p.sendReply(msg)
 
-					user.Subs["Все Меню"] = now
-					p.store.Put(chatID, user)
+						user.Subs["Все Меню"] = now
+						p.store.Put(chatID, user)
+					}
 
 				} else if len(active) != 0 {
 					menu, _ := p.api.GetMenu(user)
@@ -123,8 +125,6 @@ func (p *Publisher) subscriptionTask(chatID int64, done chan string) {
 
 				}
 
-				msg := tg.NewMessage(chatID, "tick")
-				p.sendReply(msg)
 			}
 		}
 	}()
