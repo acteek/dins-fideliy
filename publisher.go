@@ -2,9 +2,11 @@ package main
 
 import (
 	"fideliy/dins"
-	tg "github.com/acteek/telegram-bot-api"
+	"fideliy/helpers"
 	"log"
 	"time"
+
+	tg "github.com/acteek/telegram-bot-api"
 )
 
 //Publisher create and delete publish tasks for subscriptions
@@ -68,10 +70,8 @@ func (p *Publisher) Start() {
 	go p.initFromStore()
 }
 
-
-//TODO implement task logic
 func (p *Publisher) subscriptionTask(chatID int64, done chan string) {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(time.Hour)
 	log.Println("Task Create chatID: ", chatID)
 	go func() {
 		for {
@@ -79,13 +79,64 @@ func (p *Publisher) subscriptionTask(chatID int64, done chan string) {
 			case <-done:
 				log.Println("Task Cancel chatID: ", chatID)
 				return
-			case <-ticker.C:
+			case now := <-ticker.C:
+				user, _ := p.store.Get(chatID)
+
+				var active []string
+				for sub, trigered := range user.Subs {
+					tgHour := trigered.Truncate(time.Hour)
+					if now.Truncate(time.Hour).After(tgHour) {
+						active = append(active, sub)
+					}
+				}
+
+				if contains(active, "Все Меню") {
+					menu, _ := p.api.GetMenu(user)
+					msg := tg.NewMessage(chatID, "Меню по подписке")
+					msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
+					p.sendReply(msg)
+
+					user.Subs["Все Меню"] = now
+					p.store.Put(chatID, user)
+
+				} else if len(active) != 0 {
+					menu, _ := p.api.GetMenu(user)
+					var matches []string
+					for _, meal := range menu {
+						if contains(active, meal.Name) {
+							matches = append(matches, meal.Name)
+						}
+
+						if len(matches) > 0 {
+							msg := tg.NewMessage(chatID, "Меню по подписке "+matches[0])
+							msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
+							p.sendReply(msg)
+
+							for _, sub := range matches {
+								user.Subs[sub] = now
+
+							}
+
+							p.store.Put(chatID, user)
+						}
+					}
+
+				}
 
 				msg := tg.NewMessage(chatID, "tick")
 				p.sendReply(msg)
 			}
 		}
 	}()
+}
+
+func contains(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Publisher) initFromStore() {
