@@ -9,7 +9,7 @@ import (
 func BuildMainKeyboard() telegram.ReplyKeyboardMarkup {
 	return telegram.NewReplyKeyboard(
 		telegram.NewKeyboardButtonRow(
-			// telegram.NewKeyboardButton("Подписки"),
+			telegram.NewKeyboardButton("Подписки"),
 			telegram.NewKeyboardButton("Мои Заказы"),
 			telegram.NewKeyboardButton("Меню"),
 		))
@@ -36,6 +36,26 @@ func BuildMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
 	}
 }
 
+// BuildMakeSubMenuKeyBoard returns keyboard for subs menu
+func BuildMakeSubMenuKeyBoard(meals []dins.Meal) telegram.InlineKeyboardMarkup {
+	var keyboard [][]telegram.InlineKeyboardButton
+
+	serviceButtons := telegram.NewInlineKeyboardRow(
+		telegram.NewInlineKeyboardButtonData("❌ Закрыть", Close),
+	)
+
+	for i := 0; i < len(meals); i++ {
+		row := telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData(meals[i].Name, MakeSub+meals[i].ID))
+		keyboard = append(keyboard, row)
+
+	}
+
+	return telegram.InlineKeyboardMarkup{
+		InlineKeyboard: append(keyboard, serviceButtons),
+	}
+}
+
 // BuildOrderKeyBoard returns keyboard for make order
 func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
@@ -45,8 +65,8 @@ func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 		))
 }
 
-// BuildSubKeyBoard returns main keyboard for subscriptions
-func BuildSubKeyBoard() telegram.InlineKeyboardMarkup {
+// BuildSubMainKeyBoard returns main keyboard for subscriptions
+func BuildSubMainKeyBoard() telegram.InlineKeyboardMarkup {
 	return telegram.NewInlineKeyboardMarkup(
 		telegram.NewInlineKeyboardRow(
 			telegram.NewInlineKeyboardButtonData("🔔 Подписаться", MakeSubs),
@@ -55,6 +75,43 @@ func BuildSubKeyBoard() telegram.InlineKeyboardMarkup {
 		telegram.NewInlineKeyboardRow(
 			telegram.NewInlineKeyboardButtonData("❌ Отмена", Close)),
 	)
+}
+
+// BuildMakeSubKeyBoard returns make keyboard for subscriptions
+func BuildMakeSubKeyBoard() telegram.InlineKeyboardMarkup {
+	return telegram.NewInlineKeyboardMarkup(
+		telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData("На всё меню", MakeSubsAll),
+			telegram.NewInlineKeyboardButtonData("Выбрать блюда", MakeSubsMenu),
+		),
+		telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData("❌ Отмена", Close)),
+	)
+}
+
+// BuildCancelSubKeyBoard returns make keyboard for subscriptions
+func BuildCancelSubKeyBoard(subs []string) telegram.InlineKeyboardMarkup {
+	var keyboard [][]telegram.InlineKeyboardButton
+
+	serviceButton := telegram.NewInlineKeyboardRow(
+		telegram.NewInlineKeyboardButtonData("❌ Закрыть", Close),
+	)
+
+	cancelAllButton := telegram.NewInlineKeyboardRow(
+		telegram.NewInlineKeyboardButtonData("От всего", CancelSubsAll),
+	)
+
+	for i := 0; i < len(subs); i++ {
+		row := telegram.NewInlineKeyboardRow(
+			telegram.NewInlineKeyboardButtonData(subs[i], CancelSub+subs[i]))
+		keyboard = append(keyboard, row)
+
+	}
+
+	return telegram.InlineKeyboardMarkup{
+		InlineKeyboard: append(keyboard, cancelAllButton, serviceButton),
+	}
+
 }
 
 // DinsRedirectKeyBoard returns keyboard with redirect to my.dins.ru

@@ -16,10 +16,10 @@ const (
 
 	//MakeOrder - user ready to make order/check basket
 	MakeOrder string = "make_order"
-	
+
 	//ClearOrder - clear basket and cancel order
 	ClearOrder string = "clear_order"
-	
+
 	//SendOrder - send order to server
 	SendOrder string = "send_order"
 
@@ -27,10 +27,25 @@ const (
 	CancelOrder string = "cancel_order:"
 
 	//CancelSubs - cancel subscribtion menu
-	CancelSubs string = "cancel_subscription"
+	CancelSubs string = "cancel_subscriptions"
 
 	//MakeSubs make subscription menu
-	MakeSubs string = "make_subscription"
+	MakeSubs string = "make_subscriptions"
+
+	//make subscription for menu
+	MakeSubsAll string = "make_subscription_all"
+
+	//cancel subscription for menu
+	CancelSubsAll string = "cancel_subscription_all"
+
+	// make subscription for particular meal
+	MakeSubsMenu string = "make_subscriptions_menu"
+
+	//MakeSub with meal ID
+	MakeSub = "make_subscription:"
+
+	//CancelSub with meal ID
+	CancelSub = "cancel_subscription:"
 )
 
 //ParseValue parse value for callback with value

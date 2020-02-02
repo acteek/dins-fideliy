@@ -4,11 +4,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fideliy/dins"
-	"github.com/prologic/bitcask"
 	"log"
+	"time"
+
+	"github.com/prologic/bitcask"
 )
 
-//Store it's a wraper for Bitcask store 
+//Store it's a wraper for Bitcask store
 type Store struct {
 	db *bitcask.Bitcask
 }
@@ -29,7 +31,7 @@ func byteOf(key int64) []byte {
 	return bytes
 }
 
-//Put user into store by telegram chatID 
+//Put user into store by telegram chatID
 func (s *Store) Put(chatID int64, user dins.User) error {
 	err := s.db.Put(byteOf(chatID), user.GetBytes())
 	return err
@@ -37,16 +39,17 @@ func (s *Store) Put(chatID int64, user dins.User) error {
 
 //Get user from store by telegram chatID
 func (s *Store) Get(chatID int64) (dins.User, error) {
-	parsed := dins.User{}
+	parsed := dins.User{Subs: map[string]time.Time{}}
 	bytes, err := s.db.Get(byteOf(chatID))
+
 	if err != nil {
 		log.Println("Read User failed: ", err)
-		return dins.User{}, err
+		return dins.User{Subs: map[string]time.Time{}}, err
 	}
 	parseErr := json.Unmarshal(bytes, &parsed)
 	if parseErr != nil {
 		log.Println("Failed Parse user: ", parseErr)
-		return dins.User{}, parseErr
+		return dins.User{Subs: map[string]time.Time{}}, parseErr
 	}
 
 	return parsed, nil
