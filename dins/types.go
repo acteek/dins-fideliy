@@ -32,9 +32,6 @@ type MenuResponse struct {
 	Orders        []Order
 }
 
-//Subs = map[categotyName]LastTimeTrigered
-type Subs = map[string]t.Time
-
 /*
 User has user data field.
 Save to store by telegram chatId
@@ -44,9 +41,9 @@ Name - Dins Domain Name
 Subs - Active subscriptions for user
 */
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Subs Subs   `json:"subscriptions"`
+	ID   string            `json:"id"`
+	Name string            `json:"name"`
+	Subs map[string]t.Time `json:"subs"`
 }
 
 //GetBytes wraper for Serialization User struct

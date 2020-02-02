@@ -17,15 +17,17 @@ type Handler struct {
 	bot    *tg.BotAPI
 	store  *Store
 	basket *Basket
+	pub    *Publisher
 }
 
 //NewHandler returns new Handler instance
-func NewHandler(api *dins.API, bot *tg.BotAPI, store *Store) *Handler {
+func NewHandler(api *dins.API, bot *tg.BotAPI, store *Store, pub *Publisher) *Handler {
 	return &Handler{
 		api:    api,
 		bot:    bot,
 		store:  store,
 		basket: NewBasket(),
+		pub:    pub,
 	}
 }
 
@@ -194,14 +196,18 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Вооот")
 
 		user, _ := h.store.Get(callback.Message.Chat.ID)
+		if len(user.Subs) != 0 {
+			var subNames []string
+			for name := range user.Subs {
+				subNames = append(subNames, name)
+			}
 
-		var subNames []string
-
-		for name := range user.Subs {
-			subNames = append(subNames, name)
+			reply.Text = "Вооот"
+			reply.ReplyMarkup = hp.BuildCancelSubKeyBoard(subNames)
+		} else {
+			reply.Text = "У тебя нет подписок"
 		}
 
-		reply.ReplyMarkup = hp.BuildCancelSubKeyBoard(subNames)
 		h.sendReply(del, reply)
 
 	case data == hp.MakeSubsAll:
@@ -212,19 +218,25 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		user.Subs["Все Меню"] = time.Time{}
 		h.store.Put(callback.Message.Chat.ID, user)
 
-		//TODO send message to Publisher
+		h.pub.Ch <- Subscription{
+			ChatID: callback.Message.Chat.ID,
+			Action: Create,
+		}
 
 		h.sendReply(del, reply)
 
 	case data == hp.CancelSubsAll:
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
-		reply := tg.NewMessage(callback.Message.Chat.ID, "Отменена подписка на все меню")
+		reply := tg.NewMessage(callback.Message.Chat.ID, "Отменены  все подписки")
 
 		user, _ := h.store.Get(callback.Message.Chat.ID)
 		user.Subs = map[string]time.Time{}
 		h.store.Put(callback.Message.Chat.ID, user)
 
-		//TODO send message to Publisher
+		h.pub.Ch <- Subscription{
+			ChatID: callback.Message.Chat.ID,
+			Action: Delete,
+		}
 
 		h.sendReply(del, reply)
 
@@ -241,8 +253,6 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 			reply.ReplyMarkup = hp.BuildMakeSubMenuKeyBoard(menu)
 		}
 
-		//TODO send message to Publisher
-
 		h.sendReply(del, reply)
 
 	case strings.Contains(data, hp.MakeSub):
@@ -257,7 +267,10 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		h.store.Put(callback.Message.Chat.ID, user)
 
 		reply.Text = "Создана подписка на " + meal.Name
-		//TODO send message to Publisher
+		h.pub.Ch <- Subscription{
+			ChatID: callback.Message.Chat.ID,
+			Action: Create,
+		}
 
 		h.sendReply(del, reply)
 
@@ -271,7 +284,13 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		h.store.Put(callback.Message.Chat.ID, user)
 
 		reply.Text = "Отменена подписка на " + mealName
-		//TODO send message to Publisher
+
+		if len(user.Subs) == 0 {
+			h.pub.Ch <- Subscription{
+				ChatID: callback.Message.Chat.ID,
+				Action: Delete,
+			}
+		}
 
 		h.sendReply(del, reply)
 
