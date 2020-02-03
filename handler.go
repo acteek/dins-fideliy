@@ -280,14 +280,32 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		if len(menu) == 0 {
 			reply.Text = "Сейчас меню не доступно, попробуй позже"
 		} else {
+			reply.Text = "Доступно для подписки"
 			reply.ReplyMarkup = hp.BuildMakeSubMenuKeyBoard(menu)
 		}
 
 		h.sendReply(del, reply)
 
-	case strings.Contains(data, hp.MakeSub):
+	case data == hp.SubsList:
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 		reply := tg.NewMessage(callback.Message.Chat.ID, "")
+
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+
+		if len(user.Subs) == 0 {
+			reply.Text = "У тебя нет подписок"
+		} else {
+			var subNames []string
+			for name := range user.Subs {
+				subNames = append(subNames, name)
+			}
+
+			reply.Text = "Твои подписки: " + strings.Join(subNames, ", ")
+		}
+
+		h.sendReply(del, reply)
+
+	case strings.Contains(data, hp.MakeSub):
 
 		mealID := hp.ParseValue(data)
 		meal := h.api.CurrentMeals[mealID]
@@ -296,13 +314,12 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		user.Subs[meal.Name] = time.Time{}
 		h.store.Put(callback.Message.Chat.ID, user)
 
-		reply.Text = "Создана подписка на " + meal.Name
 		h.pub.Ch <- Subscription{
 			ChatID: callback.Message.Chat.ID,
 			Action: Create,
 		}
 
-		h.sendReply(del, reply)
+		h.callbackReply(callback, "Создана подписка на "+meal.Name)
 
 	case strings.Contains(data, hp.CancelSub):
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)

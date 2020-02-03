@@ -84,8 +84,8 @@ func (p *Publisher) subscriptionTask(chatID int64, done chan string) {
 
 				var active []string
 				for sub, trigered := range user.Subs {
-					tgHour := trigered.Truncate(time.Hour)
-					if now.Truncate(time.Hour).After(tgHour) {
+					tgHour := trigered.Truncate(24 * time.Hour)
+					if now.Truncate(24 * time.Hour).After(tgHour) {
 						active = append(active, sub)
 					}
 				}

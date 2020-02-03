@@ -71,6 +71,7 @@ func BuildSubMainKeyBoard() telegram.InlineKeyboardMarkup {
 		telegram.NewInlineKeyboardRow(
 			telegram.NewInlineKeyboardButtonData("🔔 Подписаться", MakeSubs),
 			telegram.NewInlineKeyboardButtonData("🔕 Отписаться", CancelSubs),
+			telegram.NewInlineKeyboardButtonData("🧾 Список", SubsList),
 		),
 		telegram.NewInlineKeyboardRow(
 			telegram.NewInlineKeyboardButtonData("❌ Отмена", Close)),

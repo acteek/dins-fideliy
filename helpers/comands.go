@@ -32,6 +32,10 @@ const (
 	//MakeSubs make subscription menu
 	MakeSubs string = "make_subscriptions"
 
+
+	//list of  subscriptions 
+	SubsList string = "subscriptions_list"
+
 	//make subscription for menu
 	MakeSubsAll string = "make_subscription_all"
 
