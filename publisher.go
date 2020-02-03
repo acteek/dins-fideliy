@@ -108,19 +108,18 @@ func (p *Publisher) subscriptionTask(chatID int64, done chan string) {
 						if contains(active, meal.Name) {
 							matches = append(matches, meal.Name)
 						}
+					}
+					if len(matches) > 0 {
+						msg := tg.NewMessage(chatID, "Меню по подписке "+matches[0])
+						msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
+						p.sendReply(msg)
 
-						if len(matches) > 0 {
-							msg := tg.NewMessage(chatID, "Меню по подписке "+matches[0])
-							msg.ReplyMarkup = helpers.BuildMenuKeyBoard(menu)
-							p.sendReply(msg)
+						for _, sub := range matches {
+							user.Subs[sub] = now
 
-							for _, sub := range matches {
-								user.Subs[sub] = now
-
-							}
-
-							p.store.Put(chatID, user)
 						}
+
+						p.store.Put(chatID, user)
 					}
 
 				}
