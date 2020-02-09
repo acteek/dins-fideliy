@@ -4,8 +4,6 @@ import (
 	"fideliy/dins"
 	"flag"
 	"log"
-	// "time"
-
 	telegram "github.com/acteek/telegram-bot-api"
 )
 

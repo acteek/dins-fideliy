@@ -118,7 +118,7 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			if len(menu) == 0 {
 				reply.Text = "Сейчас меню не доступно, попробуй позже"
 			} else if hasOrder {
-				reply.Text = "Ты уже сделал заказ, используй \"Мои заказы\""
+				reply.Text = "Ты уже сделал заказ, используй \"Мои Заказы\""
 			} else {
 				reply.Text = "Вооот"
 				reply.ReplyMarkup = hp.BuildMenuKeyBoard(menu)
