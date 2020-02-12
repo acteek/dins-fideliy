@@ -3,10 +3,13 @@ package main
 import (
 	"fideliy/dins"
 	hp "fideliy/helpers"
-	tg "github.com/acteek/telegram-bot-api"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
+
+	tg "github.com/acteek/telegram-bot-api"
 )
 
 //Handler describes all methods for handle message from telegram
@@ -15,15 +18,17 @@ type Handler struct {
 	bot    *tg.BotAPI
 	store  *Store
 	basket *Basket
+	pub    *Publisher
 }
 
 //NewHandler returns new Handler instance
-func NewHandler(api *dins.API, bot *tg.BotAPI, store *Store) *Handler {
+func NewHandler(api *dins.API, bot *tg.BotAPI, store *Store, pub *Publisher) *Handler {
 	return &Handler{
 		api:    api,
 		bot:    bot,
 		store:  store,
 		basket: NewBasket(),
+		pub:    pub,
 	}
 }
 
@@ -65,6 +70,36 @@ func (h *Handler) HandleCommand(msg *tg.Message) {
 	case "start":
 		reply.Text = "Привет. Для авторизации используй \n /set_token {mydins-auth cookie c my.dins.ru}"
 		reply.ReplyMarkup = hp.BuildMainKeyboard()
+	case "stats":
+		if msg.From.UserName == "acteek" {
+			var count int
+			for chat := range h.store.ChatIDs() {
+				if chat == 0 {
+					break
+				}
+				count++
+			}
+
+			reply.Text = strconv.Itoa(count)
+		}
+	case "update":
+		m := strings.Split(msg.Text, ":")
+		if msg.From.UserName == "acteek" && len(m) >= 2 {
+			message := m[1]
+
+			for chatID := range h.store.ChatIDs() {
+				update := tg.NewMessage(chatID, message)
+				h.sendReply(update)
+
+			}
+
+			reply.Text = "Обновление отправлено"
+
+		}
+
+	case "up":
+		reply.Text = "🙀😴"
+		reply.ReplyMarkup = hp.BuildMainKeyboard()
 	default:
 		reply.Text = "Я не знаю такой команды"
 	}
@@ -84,8 +119,12 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			if len(menu) == 0 {
 				reply.Text = "Сейчас меню не доступно, попробуй позже"
 			} else if hasOrder {
-				reply.Text = "Ты уже сделал заказ, используй \"Мои заказы\""
+				reply.Text = "Ты уже сделал заказ, используй \"Мои Заказы\""
 			} else {
+				sort.Slice(menu, func(i, j int) bool {
+					return menu[i].Type > menu[j].Type
+				})
+
 				reply.Text = "Вооот"
 				reply.ReplyMarkup = hp.BuildMenuKeyBoard(menu)
 			}
@@ -107,9 +146,8 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			}
 
 		case "Подписки":
-			reply.Text = "Можно подписаться на все меню или конкретное блюдо "
-			reply.ReplyMarkup = hp.BuildSubKeyBoard()
-
+			reply.Text = "Подписки позволяют получать меню автоматически. Можно подписаться на все меню или конкретное блюдо "
+			reply.ReplyMarkup = hp.BuildSubMainKeyBoard()
 		default:
 			reply.Text = "🙀😴"
 			reply.ReplyMarkup = hp.BuildMainKeyboard()
@@ -176,6 +214,144 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 		h.basket.Delete(callback.Message.Chat.ID)
 		h.sendReply(del)
+
+	case data == hp.Close:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		h.sendReply(del)
+
+	case data == hp.MakeSubs:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "Вооот")
+
+		reply.ReplyMarkup = hp.BuildMakeSubKeyBoard()
+		h.sendReply(del, reply)
+
+	case data == hp.CancelSubs:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "Вооот")
+
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+		if len(user.Subs) != 0 {
+			var subNames []string
+			for name := range user.Subs {
+				subNames = append(subNames, name)
+			}
+
+			reply.Text = "Вооот"
+			reply.ReplyMarkup = hp.BuildCancelSubKeyBoard(subNames)
+		} else {
+			reply.Text = "У тебя нет подписок"
+		}
+
+		h.sendReply(del, reply)
+
+	case data == hp.MakeSubsAll:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "Создана подписка на все меню")
+
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+		user.Subs["Все Меню"] = time.Now()
+		h.store.Put(callback.Message.Chat.ID, user)
+
+		h.pub.Ch <- Subscription{
+			ChatID: callback.Message.Chat.ID,
+			Action: Create,
+		}
+
+		h.sendReply(del, reply)
+
+	case data == hp.CancelSubsAll:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "Отменены  все подписки")
+
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+		user.Subs = map[string]time.Time{}
+		h.store.Put(callback.Message.Chat.ID, user)
+
+		h.pub.Ch <- Subscription{
+			ChatID: callback.Message.Chat.ID,
+			Action: Delete,
+		}
+
+		h.sendReply(del, reply)
+
+	case data == hp.MakeSubsMenu:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "")
+		meals := h.api.GetSubList()
+
+		if len(meals) == 0 {
+			reply.Text = "Сейчас список блюд не доступен, попробуй позже"
+		} else {
+
+			sort.Slice(meals, func(i, j int) bool {
+				return meals[i].Type > meals[j].Type
+			})
+
+			for _, meal := range meals {
+				log.Println(meal)
+			}
+
+			reply.Text = "Доступно для подписки"
+			reply.ReplyMarkup = hp.BuildMakeSubMenuKeyBoard(meals)
+		}
+
+		h.sendReply(del, reply)
+
+	case data == hp.SubsList:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "")
+
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+
+		if len(user.Subs) == 0 {
+			reply.Text = "У тебя нет подписок"
+		} else {
+			var subNames []string
+			for name := range user.Subs {
+				subNames = append(subNames, name)
+			}
+
+			reply.Text = "Твои подписки: " + strings.Join(subNames, ", ")
+		}
+
+		h.sendReply(del, reply)
+
+	case strings.Contains(data, hp.MakeSub):
+
+		mealID := hp.ParseValue(data)
+		meal := h.api.CurrentMeals[mealID]
+
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+		user.Subs[meal.Name] = time.Now()
+		h.store.Put(callback.Message.Chat.ID, user)
+
+		h.pub.Ch <- Subscription{
+			ChatID: callback.Message.Chat.ID,
+			Action: Create,
+		}
+
+		h.callbackReply(callback, "Создана подписка на "+meal.Name)
+
+	case strings.Contains(data, hp.CancelSub):
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "")
+
+		mealName := hp.ParseValue(data)
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+		delete(user.Subs, mealName)
+		h.store.Put(callback.Message.Chat.ID, user)
+
+		reply.Text = "Отменена подписка на " + mealName
+
+		if len(user.Subs) == 0 {
+			h.pub.Ch <- Subscription{
+				ChatID: callback.Message.Chat.ID,
+				Action: Delete,
+			}
+		}
+
+		h.sendReply(del, reply)
 
 	case strings.Contains(data, hp.CancelOrder):
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош...")

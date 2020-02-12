@@ -28,7 +28,7 @@ type API struct {
 func NewDinsAPI(apiEndpoint string) *API {
 	mealStore, err := currentMeals(apiEndpoint)
 	if err != nil {
-	log.Fatal("Failed connect to dins ", apiEndpoint, err)
+		log.Fatal("Failed connect to dins ", apiEndpoint, err)
 	}
 
 	return &API{
@@ -60,6 +60,19 @@ func (d *API) GetMenu(u User) ([]Meal, bool) {
 	}
 
 	return data.Menu, len(data.Orders) > 0
+
+}
+
+//GetSubList returns list of meals avalible for subscription 
+func (d *API) GetSubList() []Meal {
+	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php")
+	if err != nil {
+		log.Println(err)
+	}
+
+	data := ParseResponse(resp)
+
+	return data.Menu
 
 }
 

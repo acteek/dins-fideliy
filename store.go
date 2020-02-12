@@ -4,11 +4,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fideliy/dins"
-	"github.com/prologic/bitcask"
 	"log"
+	"time"
+
+	"github.com/prologic/bitcask"
 )
 
-//Store it's a wraper for Bitcask store 
+//Store it's a wraper for Bitcask store
 type Store struct {
 	db *bitcask.Bitcask
 }
@@ -29,9 +31,10 @@ func byteOf(key int64) []byte {
 	return bytes
 }
 
-//Put user into store by telegram chatID 
+//Put user into store by telegram chatID
 func (s *Store) Put(chatID int64, user dins.User) error {
 	err := s.db.Put(byteOf(chatID), user.GetBytes())
+	s.db.Sync()
 	return err
 }
 
@@ -39,6 +42,7 @@ func (s *Store) Put(chatID int64, user dins.User) error {
 func (s *Store) Get(chatID int64) (dins.User, error) {
 	parsed := dins.User{}
 	bytes, err := s.db.Get(byteOf(chatID))
+
 	if err != nil {
 		log.Println("Read User failed: ", err)
 		return dins.User{}, err
@@ -47,6 +51,9 @@ func (s *Store) Get(chatID int64) (dins.User, error) {
 	if parseErr != nil {
 		log.Println("Failed Parse user: ", parseErr)
 		return dins.User{}, parseErr
+	}
+	if parsed.Subs == nil {
+		parsed.Subs = map[string]time.Time{}
 	}
 
 	return parsed, nil
@@ -57,13 +64,30 @@ func (s *Store) Has(chatID int64) bool {
 	return s.db.Has(byteOf(chatID))
 }
 
-//Keys return channel with all telegramm chatIds
-func (s *Store) Keys() chan []byte {
-	return s.db.Keys()
+//ChatIDs return channel with all telegramm chatIds
+func (s *Store) ChatIDs() chan int64 {
+	byteCh := s.db.Keys()
+	chatCh := make(chan int64)
+
+	go func() {
+		for key := range byteCh {
+			if len(key) == 0 {
+				break
+			}
+			chatCh <- int64(binary.LittleEndian.Uint64(key))
+		}
+		defer close(chatCh)
+	}()
+
+	return chatCh
 }
 
 //Close gracefully close store
 func (s *Store) Close() {
+	if err := s.db.Sync(); err != nil {
+		log.Println("Sync Store failed: ", err)
+	}
+
 	if err := s.db.Close(); err != nil {
 		log.Println("Close Store failed: ", err)
 	}
