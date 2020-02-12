@@ -63,6 +63,19 @@ func (d *API) GetMenu(u User) ([]Meal, bool) {
 
 }
 
+//GetSubList returns list of meals avalible for subscription 
+func (d *API) GetSubList() []Meal {
+	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php")
+	if err != nil {
+		log.Println(err)
+	}
+
+	data := ParseResponse(resp)
+
+	return data.Menu
+
+}
+
 //GetOrders returns list of orders for user
 func (d *API) GetOrders(u User) []Order {
 	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php?user_id=" + u.ID)

@@ -4,6 +4,7 @@ import (
 	"fideliy/dins"
 	hp "fideliy/helpers"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -120,6 +121,10 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			} else if hasOrder {
 				reply.Text = "Ты уже сделал заказ, используй \"Мои Заказы\""
 			} else {
+				sort.Slice(menu, func(i, j int) bool {
+					return menu[i].Type == menu[j].Type
+				})
+
 				reply.Text = "Вооот"
 				reply.ReplyMarkup = hp.BuildMenuKeyBoard(menu)
 			}
@@ -245,7 +250,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Создана подписка на все меню")
 
 		user, _ := h.store.Get(callback.Message.Chat.ID)
-		user.Subs["Все Меню"] = time.Time{}
+		user.Subs["Все Меню"] = time.Now()
 		h.store.Put(callback.Message.Chat.ID, user)
 
 		h.pub.Ch <- Subscription{
@@ -273,15 +278,22 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 	case data == hp.MakeSubsMenu:
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
 		reply := tg.NewMessage(callback.Message.Chat.ID, "")
+		meals := h.api.GetSubList()
 
-		user, _ := h.store.Get(callback.Message.Chat.ID)
-		menu, _ := h.api.GetMenu(user)
-
-		if len(menu) == 0 {
-			reply.Text = "Сейчас меню не доступно, попробуй позже"
+		if len(meals) == 0 {
+			reply.Text = "Сейчас список блюд не доступен, попробуй позже"
 		} else {
+
+			sort.Slice(meals, func(i, j int) bool {
+				return meals[i].Type == meals[j].Type
+			})
+
+			for _, meal := range meals {
+				log.Println(meal)
+			}
+
 			reply.Text = "Доступно для подписки"
-			reply.ReplyMarkup = hp.BuildMakeSubMenuKeyBoard(menu)
+			reply.ReplyMarkup = hp.BuildMakeSubMenuKeyBoard(meals)
 		}
 
 		h.sendReply(del, reply)
@@ -311,7 +323,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		meal := h.api.CurrentMeals[mealID]
 
 		user, _ := h.store.Get(callback.Message.Chat.ID)
-		user.Subs[meal.Name] = time.Time{}
+		user.Subs[meal.Name] = time.Now()
 		h.store.Put(callback.Message.Chat.ID, user)
 
 		h.pub.Ch <- Subscription{
