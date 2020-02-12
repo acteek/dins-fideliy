@@ -122,7 +122,7 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 				reply.Text = "Ты уже сделал заказ, используй \"Мои Заказы\""
 			} else {
 				sort.Slice(menu, func(i, j int) bool {
-					return menu[i].Type == menu[j].Type
+					return menu[i].Type > menu[j].Type
 				})
 
 				reply.Text = "Вооот"
@@ -285,7 +285,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		} else {
 
 			sort.Slice(meals, func(i, j int) bool {
-				return meals[i].Type == meals[j].Type
+				return meals[i].Type > meals[j].Type
 			})
 
 			for _, meal := range meals {
