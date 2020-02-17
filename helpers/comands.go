@@ -48,7 +48,7 @@ const (
 	MakeSub = "make_subscription:"
 
 	//CancelSub with meal ID
-	CancelSub = "cancel_subscription:"
+	CancelSub = "cancel_sub:"
 
 	//BackMenu  back menu form basket
 	BackMenu string = "back_menu"

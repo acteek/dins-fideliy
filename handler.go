@@ -226,11 +226,11 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 
 		user, _ := h.store.Get(callback.Message.Chat.ID)
 		if len(user.Subs) != 0 {
+
 			var subNames []string
 			for name := range user.Subs {
 				subNames = append(subNames, name)
 			}
-
 			reply.Text = "Вооот"
 			reply.ReplyMarkup = hp.BuildCancelSubKeyBoard(subNames)
 		} else {
@@ -256,7 +256,7 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 
 	case data == hp.CancelSubsAll:
 		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
-		reply := tg.NewMessage(callback.Message.Chat.ID, "Отменены  все подписки")
+		reply := tg.NewMessage(callback.Message.Chat.ID, "Все подписки отменены")
 
 		user, _ := h.store.Get(callback.Message.Chat.ID)
 		user.Subs = map[string]time.Time{}
@@ -337,24 +337,43 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		h.callbackReply(callback, "Создана подписка на "+meal.Name)
 
 	case strings.Contains(data, hp.CancelSub):
-		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
-		reply := tg.NewMessage(callback.Message.Chat.ID, "")
 
-		mealName := hp.ParseValue(data)
+		mealHash := hp.ParseValue(data)
 		user, _ := h.store.Get(callback.Message.Chat.ID)
-		delete(user.Subs, mealName)
-		h.store.Put(callback.Message.Chat.ID, user)
 
-		reply.Text = "Отменена подписка на " + mealName
+		for mealName := range user.Subs {
+			if hp.GetHash(mealName) == mealHash {
+				delete(user.Subs, mealName)
+
+				h.callbackReply(callback, "Отменена подписка на "+mealName)
+			}
+
+		}
+
+		h.store.Put(callback.Message.Chat.ID, user)
 
 		if len(user.Subs) == 0 {
 			h.pub.Ch <- Subscription{
 				ChatID: callback.Message.Chat.ID,
 				Action: Delete,
 			}
-		}
+			del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+			reply := tg.NewMessage(callback.Message.Chat.ID, "Все подписки отменены")
+			h.sendReply(del, reply)
 
-		h.sendReply(del, reply)
+		} else {
+
+			var subNames []string
+			for name := range user.Subs {
+				subNames = append(subNames, name)
+			}
+
+			markup := hp.BuildCancelSubKeyBoard(subNames)
+			edit := tg.NewEditMessageReplyMarkup(callback.Message.Chat.ID, callback.Message.MessageID, markup)
+
+			h.sendReply(edit)
+
+		}
 
 	case strings.Contains(data, hp.CancelOrder):
 		reply := tg.NewMessage(callback.Message.Chat.ID, "Штош...")

@@ -105,7 +105,7 @@ func BuildCancelSubKeyBoard(subs []string) telegram.InlineKeyboardMarkup {
 
 	for i := 0; i < len(subs); i++ {
 		row := telegram.NewInlineKeyboardRow(
-			telegram.NewInlineKeyboardButtonData(subs[i], CancelSub+subs[i]))
+			telegram.NewInlineKeyboardButtonData(subs[i], CancelSub+GetHash(subs[i])))
 		keyboard = append(keyboard, row)
 
 	}
