@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -59,11 +60,17 @@ func (d *API) GetMenu(u User) ([]Meal, bool) {
 		return []Meal{}, false
 	}
 
+	if len(data.Menu) > 0 {
+		sort.Slice(data.Menu, func(i, j int) bool {
+			return data.Menu[i].Type > data.Menu[j].Type
+		})
+	}
+
 	return data.Menu, len(data.Orders) > 0
 
 }
 
-//GetSubList returns list of meals avalible for subscription 
+//GetSubList returns list of meals avalible for subscription
 func (d *API) GetSubList() []Meal {
 	resp, err := d.client.Get(d.Endpoint + "/cafe-new/tomorrow_get_menu_array.php")
 	if err != nil {
@@ -71,6 +78,12 @@ func (d *API) GetSubList() []Meal {
 	}
 
 	data := ParseResponse(resp)
+
+	if len(data.Menu) > 0 {
+		sort.Slice(data.Menu, func(i, j int) bool {
+			return data.Menu[i].Type > data.Menu[j].Type
+		})
+	}
 
 	return data.Menu
 

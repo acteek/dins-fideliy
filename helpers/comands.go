@@ -32,8 +32,7 @@ const (
 	//MakeSubs make subscription menu
 	MakeSubs string = "make_subscriptions"
 
-
-	//list of  subscriptions 
+	//list of  subscriptions
 	SubsList string = "subscriptions_list"
 
 	//make subscription for menu
@@ -50,6 +49,9 @@ const (
 
 	//CancelSub with meal ID
 	CancelSub = "cancel_subscription:"
+
+	//BackMenu  back menu form basket
+	BackMenu string = "back_menu"
 )
 
 //ParseValue parse value for callback with value

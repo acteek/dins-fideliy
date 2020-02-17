@@ -3,13 +3,11 @@ package main
 import (
 	"fideliy/dins"
 	hp "fideliy/helpers"
+	tg "github.com/acteek/telegram-bot-api"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	tg "github.com/acteek/telegram-bot-api"
 )
 
 //Handler describes all methods for handle message from telegram
@@ -41,7 +39,7 @@ func (h *Handler) sendReply(reply ...tg.Chattable) {
 }
 
 func (h *Handler) callbackReply(cb *tg.CallbackQuery, text string) {
-	if _, err := h.bot.AnswerCallbackQuery(tg.NewCallbackWithAlert(cb.ID, text)); err != nil {
+	if _, err := h.bot.AnswerCallbackQuery(tg.NewCallback(cb.ID, text)); err != nil {
 		log.Println("Failed send answer callback to telegram", err)
 	}
 }
@@ -121,10 +119,6 @@ func (h *Handler) HandleMessage(msg *tg.Message) {
 			} else if hasOrder {
 				reply.Text = "Ты уже сделал заказ, используй \"Мои Заказы\""
 			} else {
-				sort.Slice(menu, func(i, j int) bool {
-					return menu[i].Type > menu[j].Type
-				})
-
 				reply.Text = "Вооот"
 				reply.ReplyMarkup = hp.BuildMenuKeyBoard(menu)
 			}
@@ -283,15 +277,6 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 		if len(meals) == 0 {
 			reply.Text = "Сейчас список блюд не доступен, попробуй позже"
 		} else {
-
-			sort.Slice(meals, func(i, j int) bool {
-				return meals[i].Type > meals[j].Type
-			})
-
-			for _, meal := range meals {
-				log.Println(meal)
-			}
-
 			reply.Text = "Доступно для подписки"
 			reply.ReplyMarkup = hp.BuildMakeSubMenuKeyBoard(meals)
 		}
@@ -313,6 +298,24 @@ func (h *Handler) HandleCallback(callback *tg.CallbackQuery) {
 			}
 
 			reply.Text = "Твои подписки: " + strings.Join(subNames, ", ")
+		}
+
+		h.sendReply(del, reply)
+
+	case data == hp.BackMenu:
+		del := tg.NewDeleteMessage(callback.Message.Chat.ID, callback.Message.MessageID)
+		reply := tg.NewMessage(callback.Message.Chat.ID, "")
+
+		user, _ := h.store.Get(callback.Message.Chat.ID)
+		menu, hasOrder := h.api.GetMenu(user)
+
+		if len(menu) == 0 {
+			reply.Text = "Сейчас меню не доступно, попробуй позже"
+		} else if hasOrder {
+			reply.Text = "Ты уже сделал заказ, используй \"Мои Заказы\""
+		} else {
+			reply.Text = "Вооот"
+			reply.ReplyMarkup = hp.BuildMenuKeyBoard(menu)
 		}
 
 		h.sendReply(del, reply)
