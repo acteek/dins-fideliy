@@ -62,7 +62,7 @@ func BuildOrderKeyBoard() telegram.InlineKeyboardMarkup {
 		telegram.NewInlineKeyboardRow(
 			telegram.NewInlineKeyboardButtonData("❌ Отмена", ClearOrder),
 			telegram.NewInlineKeyboardButtonData("◀️ Меню", BackMenu),
-			telegram.NewInlineKeyboardButtonData("✅ Ок", SendOrder),
+			telegram.NewInlineKeyboardButtonData("✅ Заказать", SendOrder),
 		))
 }
 
